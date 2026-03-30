@@ -1,4 +1,6 @@
 import 'package:first_lab/modules/counter/counter_module.dart';
+import 'package:first_lab/shared/styles/app_colors.dart';
+import 'package:first_lab/shared/styles/app_shadows.dart';
 import 'package:first_lab/shared/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -21,27 +23,29 @@ class _HomePageState extends State<HomePage> {
       ? 1
       : _counter.counter / CounterModule.unlockThreshold;
 
-  Color _getAuraColor(ColorScheme colors) {
-    if (_counter.hasUnlockedImage) return colors.tertiary;
+  Color _getAuraColor() {
+    if (_counter.hasUnlockedImage) {
+      return AppColors.success;
+    }
 
     final stage = _counter.counter % CounterModule.stageImagePaths.length;
-    if (stage == 0) return colors.primary;
-    if (stage == 1) return colors.secondary;
-    return colors.inversePrimary;
+    if (stage == 0) {
+      return AppColors.blue500;
+    }
+    if (stage == 1) {
+      return AppColors.warning;
+    }
+    return AppColors.danger;
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).colorScheme;
     final activeImage = _counter.activeImagePath;
-    final auraColor = _getAuraColor(colors);
+    final auraColor = _getAuraColor();
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: colors.inversePrimary,
-        title: Text(widget.title, style: AppTextStyles.tertiaryHeader),
-      ),
+      appBar: AppBar(title: Text(widget.title, style: textTheme.headlineSmall)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -56,20 +60,20 @@ class _HomePageState extends State<HomePage> {
                   curve: Curves.easeOutCubic,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.border),
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        auraColor.withValues(alpha: 0.25),
-                        colors.surface,
+                        auraColor.withValues(alpha: 0.16),
+                        AppColors.surface,
                       ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: auraColor.withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        spreadRadius: 1,
+                    boxShadow: <BoxShadow>[
+                      AppShadows.dropShadowForButtons.copyWith(
+                        color: auraColor.withValues(alpha: 0.2),
                       ),
                     ],
                   ),
@@ -94,23 +98,44 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               Text(
                 'Counter:',
-                style: textTheme.bodyMedium ?? AppTextStyles.counterLabel,
+                style:
+                    textTheme.bodyMedium?.copyWith(
+                      color: AppColors.secondaryText,
+                    ) ??
+                    AppTextStyles.text2.copyWith(
+                      color: AppColors.secondaryText,
+                    ),
               ),
               Text(
                 '${_counter.counter}',
                 key: const Key('counter_value'),
-                style: textTheme.headlineMedium ?? AppTextStyles.counterValue,
+                style:
+                    textTheme.displayMedium?.copyWith(
+                      color: AppColors.primaryText,
+                    ) ??
+                    AppTextStyles.header2.copyWith(
+                      color: AppColors.primaryText,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
                 _counter.stageLabel,
                 textAlign: TextAlign.center,
-                style: textTheme.bodyLarge,
+                style:
+                    textTheme.bodyLarge?.copyWith(
+                      color: AppColors.primaryText,
+                    ) ??
+                    AppTextStyles.text1.copyWith(color: AppColors.primaryText),
               ),
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(value: _progress, minHeight: 10),
+                child: LinearProgressIndicator(
+                  value: _progress,
+                  minHeight: 10,
+                  backgroundColor: AppColors.gray100,
+                  valueColor: AlwaysStoppedAnimation<Color>(auraColor),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -118,7 +143,17 @@ class _HomePageState extends State<HomePage> {
                     ? 'Threshold reached. The fourth image is active.'
                     : 'Remaining to threshold 20: ${_counter.pointsToUnlock}.',
                 key: const Key('unlock_status'),
-                style: textTheme.bodyMedium,
+                style:
+                    textTheme.bodyMedium?.copyWith(
+                      color: _counter.hasUnlockedImage
+                          ? AppColors.success
+                          : AppColors.secondaryText,
+                    ) ??
+                    AppTextStyles.text2.copyWith(
+                      color: _counter.hasUnlockedImage
+                          ? AppColors.success
+                          : AppColors.secondaryText,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -126,7 +161,9 @@ class _HomePageState extends State<HomePage> {
                     ? 'State locked: the fourth image stays active.'
                     : 'When value is below 20, 3 images rotate in a loop.',
                 textAlign: TextAlign.center,
-                style: textTheme.bodySmall,
+                style:
+                    textTheme.bodySmall?.copyWith(color: AppColors.mutedText) ??
+                    AppTextStyles.text3.copyWith(color: AppColors.mutedText),
               ),
             ],
           ),
