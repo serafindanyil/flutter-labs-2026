@@ -6,7 +6,7 @@ class PrimaryContainer extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
-  const PrimaryContainer({super.key, required this.child, this.padding});
+  const PrimaryContainer({required this.child, super.key, this.padding});
 
   @override
   Widget build(BuildContext context) {

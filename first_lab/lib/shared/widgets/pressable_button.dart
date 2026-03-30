@@ -4,7 +4,7 @@ class PressableButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
 
-  const PressableButton({super.key, required this.child, required this.onTap});
+  const PressableButton({required this.child, required this.onTap, super.key});
 
   @override
   State<PressableButton> createState() => _PressableButtonState();

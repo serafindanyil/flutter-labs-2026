@@ -11,13 +11,13 @@ class DualIndicatorCard extends StatelessWidget {
   final String value2;
 
   const DualIndicatorCard({
-    super.key,
     required this.title1,
     required this.suffix1,
     required this.value1,
     required this.title2,
     required this.suffix2,
     required this.value2,
+    super.key,
   });
 
   @override

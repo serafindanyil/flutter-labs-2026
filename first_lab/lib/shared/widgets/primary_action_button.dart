@@ -8,9 +8,9 @@ class PrimaryActionButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const PrimaryActionButton({
-    super.key,
     required this.icon,
     required this.onTap,
+    super.key,
   });
 
   @override
@@ -20,7 +20,7 @@ class PrimaryActionButton extends StatelessWidget {
       child: Container(
         width: 64,
         height: 64,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.blue500,
           shape: BoxShape.circle,
           boxShadow: AppShadows.button,

@@ -10,9 +10,9 @@ class ModeWidget extends StatelessWidget {
   final ValueChanged<DeviceMode> onModeChanged;
 
   const ModeWidget({
-    super.key,
     required this.mode,
     required this.onModeChanged,
+    super.key,
   });
 
   @override

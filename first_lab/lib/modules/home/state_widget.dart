@@ -8,7 +8,7 @@ class StateWidget extends StatelessWidget {
   final bool isOn;
   final ValueChanged<bool> onToggle;
 
-  const StateWidget({super.key, required this.isOn, required this.onToggle});
+  const StateWidget({required this.isOn, required this.onToggle, super.key});
 
   @override
   Widget build(BuildContext context) {

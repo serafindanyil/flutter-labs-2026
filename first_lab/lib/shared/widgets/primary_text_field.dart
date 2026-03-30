@@ -15,9 +15,9 @@ class PrimaryTextField extends StatefulWidget {
   final bool autofocus;
 
   const PrimaryTextField({
-    super.key,
     required this.hintText,
     required this.controller,
+    super.key,
     this.label,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
@@ -50,9 +50,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
     super.dispose();
   }
 
-  void _onFocusChange() {
-    setState(() => _isFocused = _focusNode.hasFocus);
-  }
+  void _onFocusChange() => setState(() => _isFocused = _focusNode.hasFocus);
 
   Color get _borderColor {
     if (widget.errorText != null) return AppColors.red;
@@ -88,7 +86,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
             boxShadow: _isFocused && widget.errorText == null
                 ? [
                     BoxShadow(
-                      color: AppColors.blue500.withOpacity(0.1),
+                      color: AppColors.blue500.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -136,7 +134,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
                   padding: const EdgeInsets.only(top: 8, left: 4),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.error_outline_rounded,
                         size: 16,
                         color: AppColors.red,

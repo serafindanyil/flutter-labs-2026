@@ -10,10 +10,10 @@ class AuthLayout extends StatelessWidget {
   final List<Widget> children;
 
   const AuthLayout({
-    super.key,
     required this.title,
     required this.subtitle,
     required this.children,
+    super.key,
     this.onBack,
   });
 
@@ -29,7 +29,6 @@ class AuthLayout extends StatelessWidget {
             children: [
               if (onBack != null)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     PressableButton(
                       onTap: onBack!,

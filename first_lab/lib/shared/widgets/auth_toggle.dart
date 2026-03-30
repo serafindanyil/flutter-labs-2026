@@ -8,10 +8,10 @@ class AuthToggle extends StatelessWidget {
   final VoidCallback onTap;
 
   const AuthToggle({
-    super.key,
     required this.text,
     required this.actionText,
     required this.onTap,
+    super.key,
   });
 
   @override

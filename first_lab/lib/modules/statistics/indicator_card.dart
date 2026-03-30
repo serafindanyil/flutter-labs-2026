@@ -9,9 +9,9 @@ class IndicatorCard extends StatelessWidget {
   final Color? statusColor;
 
   const IndicatorCard({
-    super.key,
     required this.title,
     required this.value,
+    super.key,
     this.status,
     this.statusColor,
   });

@@ -8,9 +8,9 @@ class EmergencyNotification extends StatelessWidget {
   final IconData icon;
 
   const EmergencyNotification({
-    super.key,
     required this.title,
     required this.icon,
+    super.key,
   });
 
   @override
