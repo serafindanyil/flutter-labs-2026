@@ -65,15 +65,12 @@ class _IndicatorSubCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
+              Text(title, style: Theme.of(context).textTheme.displayMedium),
               Text(
                 suffix,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.mutedText,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
               ),
             ],
           ),
@@ -81,9 +78,9 @@ class _IndicatorSubCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: AppColors.blue500,
-                  fontSize: 28,
-                ),
+              color: AppColors.blue500,
+              fontSize: 28,
+            ),
           ),
         ],
       ),

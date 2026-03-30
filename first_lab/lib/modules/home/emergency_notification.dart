@@ -1,6 +1,7 @@
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/primary_container.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class EmergencyNotification extends StatelessWidget {
   final String title;
@@ -21,12 +22,13 @@ class EmergencyNotification extends StatelessWidget {
           Icon(icon, color: AppColors.primaryText, size: 28),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
           ),
-          const Icon(Icons.chevron_right, color: AppColors.mutedText, size: 24),
+          const Icon(
+            LucideIcons.chevronRight,
+            color: AppColors.mutedText,
+            size: 24,
+          ),
         ],
       ),
     );

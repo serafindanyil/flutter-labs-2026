@@ -1,5 +1,6 @@
 import 'package:first_lab/modules/home/home_module.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, String? title});
@@ -27,22 +28,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 120),
       children: [
-        Text(
-          'Керування',
-          style: Theme.of(context).textTheme.displayLarge,
-        ),
+        Text('Керування', style: Theme.of(context).textTheme.displayLarge),
         const SizedBox(height: 24),
-        ModeWidget(
-          mode: _currentMode,
-          onModeChanged: _onModeChanged,
-        ),
+        ModeWidget(mode: _currentMode, onModeChanged: _onModeChanged),
         const SizedBox(height: 16),
-        StateWidget(
-          isOn: _isOn,
-          onToggle: _onToggleState,
-        ),
+        StateWidget(isOn: _isOn, onToggle: _onToggleState),
         const SizedBox(height: 32),
         Text(
           'Термінові сповіщення',
@@ -51,14 +43,13 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 16),
         const EmergencyNotification(
           title: 'Перевищено рівень CO2',
-          icon: Icons.cloud,
+          icon: LucideIcons.cloud,
         ),
         const SizedBox(height: 16),
         const EmergencyNotification(
           title: 'Велика різниця температур',
-          icon: Icons.thermostat,
+          icon: LucideIcons.thermometer,
         ),
-        const SizedBox(height: 100),
       ],
     );
   }

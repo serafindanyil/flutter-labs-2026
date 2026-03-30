@@ -1,4 +1,4 @@
-import 'package:first_lab/pages/main/main_page.dart';
+import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'SmartRecu',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: const MainPage(),
+      home: const Layout(),
     );
   }
 }

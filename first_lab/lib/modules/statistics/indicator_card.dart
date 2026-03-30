@@ -25,16 +25,13 @@ class IndicatorCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
+              Text(title, style: Theme.of(context).textTheme.displayMedium),
               if (status != null)
                 Text(
                   status!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: statusColor ?? AppColors.mutedText,
-                      ),
+                    color: statusColor ?? AppColors.mutedText,
+                  ),
                 ),
             ],
           ),
@@ -42,9 +39,9 @@ class IndicatorCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: AppColors.blue500,
-                  fontSize: 32,
-                ),
+              color: AppColors.blue500,
+              fontSize: 32,
+            ),
           ),
         ],
       ),

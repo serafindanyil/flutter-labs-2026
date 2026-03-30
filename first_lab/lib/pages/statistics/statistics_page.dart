@@ -8,12 +8,9 @@ class StatisticsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 120),
       children: [
-        Text(
-          'Показники',
-          style: Theme.of(context).textTheme.displayLarge,
-        ),
+        Text('Показники', style: Theme.of(context).textTheme.displayLarge),
         const SizedBox(height: 24),
         const IndicatorCard(
           title: 'Рівень CO₂',
@@ -23,28 +20,15 @@ class StatisticsPage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         const IndicatorCard(
-          title: 'Атмосферний тиск',
-          value: '334 Па',
-          status: 'Добре',
-          statusColor: AppColors.green,
-        ),
-        const SizedBox(height: 16),
-        const IndicatorCard(
           title: 'Вологість',
           value: '50 %',
           status: 'Нормально',
           statusColor: AppColors.yellow,
         ),
         const SizedBox(height: 16),
-        const IndicatorCard(
-          title: 'Оберти вентиляторів',
-          value: '2800 mhp',
-        ),
+        const IndicatorCard(title: 'Оберти вентиляторів', value: '2800 mhp'),
         const SizedBox(height: 16),
-        const IndicatorCard(
-          title: 'ККД рекуператора',
-          value: '60 %',
-        ),
+        const IndicatorCard(title: 'ККД рекуператора', value: '60 %'),
         const SizedBox(height: 16),
         const DualIndicatorCard(
           title1: 'Темп',
@@ -54,7 +38,6 @@ class StatisticsPage extends StatelessWidget {
           suffix2: 'Вихідна',
           value2: '20 °C',
         ),
-        const SizedBox(height: 100), // Bottom padding for navbar
       ],
     );
   }

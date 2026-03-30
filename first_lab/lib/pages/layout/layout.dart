@@ -1,22 +1,25 @@
 import 'package:first_lab/pages/home/home_page.dart';
+import 'package:first_lab/pages/settings/settings_page.dart';
 import 'package:first_lab/pages/statistics/statistics_page.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
+import 'package:first_lab/shared/styles/app_shadows.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+class Layout extends StatefulWidget {
+  const Layout({super.key});
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<Layout> createState() => _LayoutState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _LayoutState extends State<Layout> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
     HomePage(),
     StatisticsPage(),
-    Scaffold(), 
+    SettingsPage(),
   ];
 
   void _onTabTapped(int index) {
@@ -28,8 +31,10 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: const Color(0xFFE2E6EC),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             const _Header(),
@@ -39,7 +44,7 @@ class _MainPageState extends State<MainPage> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 24.0),
+          padding: EdgeInsets.zero,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -49,22 +54,23 @@ class _MainPageState extends State<MainPage> {
                 decoration: BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.circular(40),
+                  boxShadow: AppShadows.button,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _BottomNavItem(
-                      icon: Icons.home,
+                      icon: LucideIcons.home,
                       isSelected: _currentIndex == 0,
                       onTap: () => _onTabTapped(0),
                     ),
                     _BottomNavItem(
-                      icon: Icons.bar_chart,
+                      icon: LucideIcons.chartColumnBig,
                       isSelected: _currentIndex == 1,
                       onTap: () => _onTabTapped(1),
                     ),
                     _BottomNavItem(
-                      icon: Icons.settings,
+                      icon: LucideIcons.settings,
                       isSelected: _currentIndex == 2,
                       onTap: () => _onTabTapped(2),
                     ),
@@ -91,28 +97,33 @@ class _Header extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(40),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.blue100.withValues(alpha: 0.5),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            const Icon(Icons.waves, size: 24),
+            const Icon(LucideIcons.waves, size: 24),
             const SizedBox(width: 8),
-            Text(
-              'SmartRecu',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
+            Text('SmartRecu', style: Theme.of(context).textTheme.displayMedium),
             const SizedBox(width: 8),
             Text(
               'v 0.1',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.mutedText,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
             ),
             const Spacer(),
             Text(
               'Online',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.blue500,
-                  ),
+                color: AppColors.blue500,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
