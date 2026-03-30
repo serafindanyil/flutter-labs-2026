@@ -1,0 +1,76 @@
+# =========================
+# Miscellaneous / OS / Editor
+# =========================
+*.class
+*.log
+*.pyc
+*.swp
+*.swo
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history/
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# =========================
+# IDE
+# =========================
+*.iml
+*.ipr
+*.iws
+.idea/
+# VS Code configs (uncomment if you want to include them)
+#.vscode/
+
+# =========================
+# Flutter / Dart / Pub
+# =========================
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# =========================
+# Android / iOS
+# =========================
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle/
+/android/.idea/
+/android/local.properties
+
+# iOS Pods and workspace
+ios/Pods/
+ios/Runner.xcworkspace/
+
+# =========================
+# Symbolication / Obfuscation
+# =========================
+app.*.symbols
+app.*.map.json
+
+# =========================
+# Dart2JS / JS output
+# =========================
+*.dart.js
+*.info.json
+*.js
+*.js_
+*.js.deps
+*.js.map
+
+# =========================
+# Environment
+# =========================
+.env*
+pubspec.lock
