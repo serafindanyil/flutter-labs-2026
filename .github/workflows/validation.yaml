@@ -2,14 +2,16 @@ name: Dart CI
 
 on:
   pull_request:
-
-env:
-  FLUTTER_VERSION: '3.41.3'
+  workflow_dispatch:
 
 jobs:
   validation:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: ./first_lab
 
     steps:
       - name: Checkout Repository
@@ -18,8 +20,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Dependencies
@@ -29,6 +30,7 @@ jobs:
         run: dart format --set-exit-if-changed .
 
       - name: Run Analysis
-        uses: invertase/github-action-dart-analyzer@main
+        uses: invertase/github-action-dart-analyzer@v1
         with:
-          fatal-infos: true 
+          fatal-infos: true
+          working-directory: ./first_lab
