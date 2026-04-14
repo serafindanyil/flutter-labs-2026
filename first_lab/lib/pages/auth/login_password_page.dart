@@ -2,8 +2,8 @@ import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
+import 'package:first_lab/shared/widgets/password_text_field.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
-import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
 
 class LoginPasswordPage extends StatefulWidget {
@@ -82,10 +82,9 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
       children: [
         Text('Пароль', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: AuthConstants.spacingXXSmall),
-        PrimaryTextField(
+        PasswordTextField(
           hintText: 'Ваш пароль',
           controller: _controller,
-          obscureText: true,
           errorText: _errorText,
           onFieldSubmitted: _onNext,
         ),

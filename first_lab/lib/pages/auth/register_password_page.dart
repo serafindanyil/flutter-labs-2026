@@ -3,8 +3,8 @@ import 'package:first_lab/modules/auth/models/user_model.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
+import 'package:first_lab/shared/widgets/password_text_field.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
-import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
 
 class RegisterPasswordPage extends StatefulWidget {
@@ -82,10 +82,9 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
       children: [
         Text('Пароль', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: AuthConstants.spacingXXSmall),
-        PrimaryTextField(
+        PasswordTextField(
           hintText: 'Мінімум ${AuthConstants.minPasswordLength} символів',
           controller: _controller,
-          obscureText: true,
           errorText: _errorText,
           onFieldSubmitted: _onNext,
         ),
