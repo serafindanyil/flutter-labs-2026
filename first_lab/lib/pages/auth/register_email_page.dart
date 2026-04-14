@@ -16,31 +16,52 @@ class RegisterEmailPage extends StatefulWidget {
 }
 
 class _RegisterEmailPageState extends State<RegisterEmailPage> {
-  final TextEditingController _controller = TextEditingController();
-  String? _errorText;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+
+  String? _nameErrorText;
+  String? _emailErrorText;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
   void _onNext() {
-    setState(() => _errorText = null);
-    final email = _controller.text.trim();
+    setState(() {
+      _nameErrorText = null;
+      _emailErrorText = null;
+    });
+
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+
+    bool hasError = false;
+
+    if (name.isEmpty) {
+      setState(() => _nameErrorText = 'Ім\'я не може бути порожнім');
+      hasError = true;
+    } else if (RegExp(r'\d').hasMatch(name)) {
+      setState(() => _nameErrorText = 'Ім\'я не може містити цифри');
+      hasError = true;
+    }
 
     if (email.isEmpty) {
-      setState(() => _errorText = 'Емейл не може бути порожнім');
-      return;
+      setState(() => _emailErrorText = 'Емейл не може бути порожнім');
+      hasError = true;
+    } else if (!RegExp(AppConstants.emailRegex).hasMatch(email)) {
+      setState(() => _emailErrorText = 'Невірний формат емейлу');
+      hasError = true;
     }
 
-    if (!RegExp(AppConstants.emailRegex).hasMatch(email)) {
-      setState(() => _errorText = 'Невірний формат емейлу');
-      return;
-    }
+    if (hasError) return;
 
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const RegisterPasswordPage()),
+      MaterialPageRoute<void>(
+        builder: (_) => RegisterPasswordPage(name: name, email: email),
+      ),
     );
   }
 
@@ -56,13 +77,26 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
       title: 'Створити акаунт',
       subtitle: 'Приєднайтесь до нас, коли небудь',
       children: [
+        Text(
+          'Введіть ваше ім\'я',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AuthConstants.spacingSmall),
+        PrimaryTextField(
+          hintText: 'Ім\'я',
+          controller: _nameController,
+          errorText: _nameErrorText,
+          keyboardType: TextInputType.name,
+          onFieldSubmitted: _onNext,
+        ),
+        const SizedBox(height: AuthConstants.spacingMedium),
         Text('Емейл', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: AuthConstants.spacingSmall),
         PrimaryTextField(
           hintText: 'example@mail.com',
-          controller: _controller,
+          controller: _emailController,
           keyboardType: TextInputType.emailAddress,
-          errorText: _errorText,
+          errorText: _emailErrorText,
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),

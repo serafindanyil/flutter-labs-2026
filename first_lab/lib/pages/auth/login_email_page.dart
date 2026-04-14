@@ -39,9 +39,9 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const LoginPasswordPage()));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LoginPasswordPage(email: email)),
+    );
   }
 
   void _onRegisterTap() {

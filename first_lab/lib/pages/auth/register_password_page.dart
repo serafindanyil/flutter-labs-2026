@@ -1,3 +1,5 @@
+import 'package:first_lab/modules/auth/auth_provider.dart';
+import 'package:first_lab/modules/auth/models/user_model.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
@@ -6,7 +8,14 @@ import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
 
 class RegisterPasswordPage extends StatefulWidget {
-  const RegisterPasswordPage({super.key});
+  final String name;
+  final String email;
+
+  const RegisterPasswordPage({
+    required this.name,
+    required this.email,
+    super.key,
+  });
 
   @override
   State<RegisterPasswordPage> createState() => _RegisterPasswordPageState();
@@ -15,6 +24,7 @@ class RegisterPasswordPage extends StatefulWidget {
 class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
   final TextEditingController _controller = TextEditingController();
   String? _errorText;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,7 +32,7 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
     super.dispose();
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     setState(() => _errorText = null);
     final password = _controller.text;
 
@@ -39,10 +49,28 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
       return;
     }
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const Layout()),
-      (_) => false,
-    );
+    setState(() => _isLoading = true);
+
+    try {
+      final user = UserModel(
+        name: widget.name,
+        email: widget.email,
+        password: password,
+      );
+      await AuthProvider.repository.register(user);
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const Layout()),
+        (_) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorText = 'Помилка реєстрації. Спробуйте пізніше.';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -62,7 +90,10 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        PrimaryButton(title: 'Зареєструватись', onTap: _onNext),
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator())
+        else
+          PrimaryButton(title: 'Зареєструватись', onTap: _onNext),
       ],
     );
   }

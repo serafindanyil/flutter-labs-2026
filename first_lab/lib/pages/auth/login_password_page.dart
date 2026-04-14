@@ -1,3 +1,4 @@
+import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
@@ -6,7 +7,9 @@ import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
 
 class LoginPasswordPage extends StatefulWidget {
-  const LoginPasswordPage({super.key});
+  final String email;
+
+  const LoginPasswordPage({required this.email, super.key});
 
   @override
   State<LoginPasswordPage> createState() => _LoginPasswordPageState();
@@ -15,6 +18,7 @@ class LoginPasswordPage extends StatefulWidget {
 class _LoginPasswordPageState extends State<LoginPasswordPage> {
   final TextEditingController _controller = TextEditingController();
   String? _errorText;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,7 +26,7 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
     super.dispose();
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     setState(() => _errorText = null);
     final password = _controller.text;
 
@@ -39,10 +43,34 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
       return;
     }
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const Layout()),
-      (_) => false,
-    );
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await AuthProvider.repository.login(widget.email, password);
+
+      if (!mounted) return;
+
+      if (user != null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(builder: (_) => const Layout()),
+          (_) => false,
+        );
+      } else {
+        setState(() {
+          _errorText = 'Невірний емейл або пароль';
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Помилка входу: перевірте ваші дані')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorText = 'Сталася помилка';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -62,7 +90,10 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        PrimaryButton(title: 'Увійти', onTap: _onNext),
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator())
+        else
+          PrimaryButton(title: 'Увійти', onTap: _onNext),
       ],
     );
   }
