@@ -1,6 +1,7 @@
 import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/models/user_model.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
@@ -65,11 +66,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_user == null) return;
     final newName = _nameController.text.trim();
     if (newName.isEmpty || RegExp(r'\d').hasMatch(newName)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Некоректне ім\'я (порожнє або містить цифри)'),
-        ),
-      );
+      AppToast.error(context, 'Некоректне ім\'я (порожнє або містить цифри)');
       return;
     }
 
@@ -81,9 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _user = updatedUser;
         _isEditing = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Зміни збережено!')));
+      AppToast.success(context, 'Зміни збережено!');
     }
   }
 

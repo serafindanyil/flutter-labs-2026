@@ -89,10 +89,11 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        if (_isLoading)
-          const Center(child: CircularProgressIndicator())
-        else
-          PrimaryButton(title: 'Зареєструватись', onTap: _onNext),
+        PrimaryButton(
+          title: 'Зареєструватись',
+          onTap: _onNext,
+          isLoading: _isLoading,
+        ),
       ],
     );
   }

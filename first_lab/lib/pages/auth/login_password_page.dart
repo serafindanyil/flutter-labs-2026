@@ -2,6 +2,7 @@ import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/password_text_field.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
@@ -60,9 +61,7 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
           _errorText = 'Невірний емейл або пароль';
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Помилка входу: перевірте ваші дані')),
-        );
+        AppToast.error(context, 'Помилка входу: перевірте ваші дані');
       }
     } catch (e) {
       if (!mounted) return;
@@ -89,10 +88,7 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        if (_isLoading)
-          const Center(child: CircularProgressIndicator())
-        else
-          PrimaryButton(title: 'Увійти', onTap: _onNext),
+        PrimaryButton(title: 'Увійти', onTap: _onNext, isLoading: _isLoading),
       ],
     );
   }
