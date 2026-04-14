@@ -1,7 +1,7 @@
 abstract final class AuthConstants {
   static const double headerHeight = 48;
   static const double spacingLarge = 48;
-  static const double spacingMedium = 24;
+  static const double spacingMedium = 28;
   static const double spacingSmall = 16;
   static const double spacingXSmall = 12;
   static const double spacingXXSmall = 8;

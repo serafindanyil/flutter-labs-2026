@@ -24,31 +24,45 @@ class RegisterPasswordPage extends StatefulWidget {
 
 class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _confirmController = TextEditingController();
   String? _errorText;
+  String? _confirmErrorText;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
   Future<void> _onNext() async {
-    setState(() => _errorText = null);
+    setState(() {
+      _errorText = null;
+      _confirmErrorText = null;
+    });
+
     final password = _controller.text;
+    final confirmPassword = _confirmController.text;
+    bool hasError = false;
 
     if (password.isEmpty) {
       setState(() => _errorText = 'Пароль не може бути порожнім');
-      return;
-    }
-
-    if (password.length < AuthConstants.minPasswordLength) {
+      hasError = true;
+    } else if (password.length < AuthConstants.minPasswordLength) {
       setState(
         () =>
             _errorText = 'Мінімум ${AuthConstants.minPasswordLength} символів',
       );
-      return;
+      hasError = true;
     }
+
+    if (password != confirmPassword) {
+      setState(() => _confirmErrorText = 'Паролі не співпадають');
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     setState(() => _isLoading = true);
 
@@ -88,6 +102,17 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
           hintText: 'Мінімум ${AuthConstants.minPasswordLength} символів',
           controller: _controller,
           errorText: _errorText,
+        ),
+        const SizedBox(height: AuthConstants.spacingMedium),
+        Text(
+          'Повторіть пароль',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
+        PasswordTextField(
+          hintText: 'Повторіть свій пароль',
+          controller: _confirmController,
+          errorText: _confirmErrorText,
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
