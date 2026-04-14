@@ -53,7 +53,7 @@ class AppToast {
       foregroundColor: AppColors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      sizeConstraints: const BoxConstraints(minHeight: 0, minWidth: 300),
+      sizeConstraints: const BoxConstraints(minWidth: 300),
       borderRadius: BorderRadius.circular(12),
       boxShadow: AppShadows.button,
       showProgressBar: false,
@@ -63,7 +63,7 @@ class AppToast {
       dismissDirection: DismissDirection.down,
       animationDuration: const Duration(milliseconds: 300),
       applyBlurEffect: false,
-      closeButtonShowType: CloseButtonShowType.none,
+      closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
       animationBuilder: (context, animation, alignment, child) {
         return SlideTransition(
           position:

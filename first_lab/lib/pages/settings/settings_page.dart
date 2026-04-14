@@ -220,7 +220,6 @@ class _ProfileFieldCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget content = Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(child: child),
         if (trailing != null) ...[const SizedBox(width: 16), trailing!],
