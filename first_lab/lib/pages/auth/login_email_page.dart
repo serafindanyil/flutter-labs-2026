@@ -57,7 +57,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       subtitle: 'Отримайте доступ до свого акаунту',
       children: [
         Text('Емейл', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'example@mail.com',
           controller: _controller,

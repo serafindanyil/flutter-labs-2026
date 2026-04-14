@@ -81,7 +81,7 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
       onBack: () => Navigator.of(context).pop(),
       children: [
         Text('Пароль', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'Ваш пароль',
           controller: _controller,

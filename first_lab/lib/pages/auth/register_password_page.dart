@@ -81,7 +81,7 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
       onBack: () => Navigator.of(context).pop(),
       children: [
         Text('Пароль', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'Мінімум ${AuthConstants.minPasswordLength} символів',
           controller: _controller,

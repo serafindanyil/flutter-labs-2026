@@ -81,7 +81,7 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
           'Введіть ваше ім\'я',
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'Ім\'я',
           controller: _nameController,
@@ -91,7 +91,7 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
         ),
         const SizedBox(height: AuthConstants.spacingMedium),
         Text('Емейл', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'example@mail.com',
           controller: _emailController,
