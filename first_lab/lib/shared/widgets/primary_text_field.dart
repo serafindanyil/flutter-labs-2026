@@ -52,7 +52,8 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
     super.dispose();
   }
 
-  void _onFocusChange() => setState(() => _isFocused = _internalFocusNode.hasFocus);
+  void _onFocusChange() =>
+      setState(() => _isFocused = _internalFocusNode.hasFocus);
 
   Color get _borderColor {
     if (widget.errorText != null) return AppColors.red;
