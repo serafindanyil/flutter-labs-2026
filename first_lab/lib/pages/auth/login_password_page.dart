@@ -58,17 +58,16 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
         );
       } else {
         setState(() {
-          _errorText = 'Невірний емейл або пароль';
           _isLoading = false;
         });
-        AppToast.error(context, 'Помилка входу: перевірте ваші дані');
+        AppToast.error(context, 'Невірний пароль');
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorText = 'Сталася помилка';
         _isLoading = false;
       });
+      AppToast.error(context, 'Сталася помилка');
     }
   }
 

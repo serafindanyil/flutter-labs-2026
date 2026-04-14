@@ -31,6 +31,18 @@ class AuthRepositoryLocal implements AuthRepository {
   }
 
   @override
+  Future<bool> checkEmailExists(String email) async {
+    final userJson = await _storage.read(key: _userKey);
+    if (userJson != null) {
+      final user = UserModel.fromJson(
+        jsonDecode(userJson) as Map<String, dynamic>,
+      );
+      return user.email == email;
+    }
+    return false;
+  }
+
+  @override
   Future<UserModel?> getCurrentUser() async {
     final isLoggedIn = await _storage.read(key: _loggedInKey);
     if (isLoggedIn == 'true') {

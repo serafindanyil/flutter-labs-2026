@@ -1,8 +1,10 @@
+import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/auth/register_password_page.dart';
 import 'package:first_lab/shared/constants/app_constants.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/auth_toggle.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:first_lab/shared/widgets/primary_text_field.dart';
@@ -21,6 +23,7 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
 
   String? _nameErrorText;
   String? _emailErrorText;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -29,7 +32,7 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
     super.dispose();
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     setState(() {
       _nameErrorText = null;
       _emailErrorText = null;
@@ -57,6 +60,16 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
     }
 
     if (hasError) return;
+
+    setState(() => _isLoading = true);
+    final exists = await AuthProvider.repository.checkEmailExists(email);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (exists) {
+      AppToast.error(context, 'Цей емейл вже зареєстровано');
+      return;
+    }
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -100,7 +113,11 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        PrimaryButton(title: 'Продовжити', onTap: _onNext),
+        PrimaryButton(
+          title: 'Продовжити',
+          onTap: _onNext,
+          isLoading: _isLoading,
+        ),
         const SizedBox(height: AuthConstants.spacingMedium),
         AuthToggle(
           text: 'Вже є акаунт? ',
