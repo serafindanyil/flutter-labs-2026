@@ -8,6 +8,8 @@ class PrimaryButton extends StatelessWidget {
   final bool isLoading;
   final bool isDisabled;
   final IconData? icon;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const PrimaryButton({
     required this.title,
@@ -16,11 +18,15 @@ class PrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.isDisabled = false,
     this.icon,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final effectivelyDisabled = isDisabled || isLoading;
+    final bgColor = backgroundColor ?? AppColors.blue500;
+    final txtColor = textColor ?? Colors.white;
 
     return PressableButton(
       onTap: effectivelyDisabled ? () {} : onTap,
@@ -31,11 +37,11 @@ class PrimaryButton extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: AppColors.blue500,
+            color: bgColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.blue500.withValues(alpha: 0.3),
+                color: bgColor.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -55,14 +61,14 @@ class PrimaryButton extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (icon != null) ...[
-                        Icon(icon, color: Colors.white, size: 20),
+                        Icon(icon, color: txtColor, size: 20),
                         const SizedBox(width: 8),
                       ],
                       Text(
                         title,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
-                              color: Colors.white,
+                              color: txtColor,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.3,
                             ),

@@ -13,6 +13,7 @@ class PrimaryTextField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final bool autofocus;
+  final FocusNode? focusNode;
 
   const PrimaryTextField({
     required this.hintText,
@@ -26,6 +27,7 @@ class PrimaryTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.autofocus = false,
+    this.focusNode,
   });
 
   @override
@@ -33,24 +35,24 @@ class PrimaryTextField extends StatefulWidget {
 }
 
 class _PrimaryTextFieldState extends State<PrimaryTextField> {
-  late FocusNode _focusNode;
+  late FocusNode _internalFocusNode;
   bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChange);
+    _internalFocusNode = widget.focusNode ?? FocusNode();
+    _internalFocusNode.addListener(_onFocusChange);
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    _internalFocusNode.removeListener(_onFocusChange);
+    if (widget.focusNode == null) _internalFocusNode.dispose();
     super.dispose();
   }
 
-  void _onFocusChange() => setState(() => _isFocused = _focusNode.hasFocus);
+  void _onFocusChange() => setState(() => _isFocused = _internalFocusNode.hasFocus);
 
   Color get _borderColor {
     if (widget.errorText != null) return AppColors.red;
@@ -105,7 +107,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
                   Expanded(
                     child: TextField(
                       controller: widget.controller,
-                      focusNode: _focusNode,
+                      focusNode: _internalFocusNode,
                       obscureText: widget.obscureText,
                       keyboardType: widget.keyboardType,
                       autofocus: widget.autofocus,
