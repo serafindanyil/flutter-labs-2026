@@ -72,86 +72,94 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
           ),
           const SizedBox(height: AuthConstants.spacingLabelInput),
         ],
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _borderColor,
-              width: _isFocused || widget.errorText != null ? 1.5 : 1,
-            ),
-            boxShadow: _isFocused && widget.errorText == null
-                ? [
-                    BoxShadow(
-                      color: AppColors.blue500.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              if (widget.prefixIcon != null) ...[
-                widget.prefixIcon!,
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: TextField(
-                  controller: widget.controller,
-                  focusNode: _focusNode,
-                  obscureText: widget.obscureText,
-                  keyboardType: widget.keyboardType,
-                  autofocus: widget.autofocus,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  cursorColor: AppColors.blue500,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: widget.hintText,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                    hintStyle: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: AppColors.mutedText),
-                  ),
-                  onSubmitted: (_) => widget.onFieldSubmitted?.call(),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _borderColor,
+                  width: _isFocused || widget.errorText != null ? 1.5 : 1,
                 ),
-              ),
-              if (widget.suffixIcon != null) ...[
-                const SizedBox(width: 12),
-                widget.suffixIcon!,
-              ],
-            ],
-          ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          child: widget.errorText != null
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 4),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        size: 16,
-                        color: AppColors.red,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          widget.errorText!,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: AppColors.red),
+                boxShadow: _isFocused && widget.errorText == null
+                    ? [
+                        BoxShadow(
+                          color: AppColors.blue500.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  if (widget.prefixIcon != null) ...[
+                    widget.prefixIcon!,
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: TextField(
+                      controller: widget.controller,
+                      focusNode: _focusNode,
+                      obscureText: widget.obscureText,
+                      keyboardType: widget.keyboardType,
+                      autofocus: widget.autofocus,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      cursorColor: AppColors.blue500,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: widget.hintText,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
+                        hintStyle: Theme.of(context).textTheme.bodyLarge
+                            ?.copyWith(color: AppColors.mutedText),
                       ),
-                    ],
+                      onSubmitted: (_) => widget.onFieldSubmitted?.call(),
+                    ),
                   ),
-                )
-              : const SizedBox.shrink(),
+                  if (widget.suffixIcon != null) ...[
+                    const SizedBox(width: 12),
+                    widget.suffixIcon!,
+                  ],
+                ],
+              ),
+            ),
+            Positioned(
+              left: 4,
+              right: 0,
+              bottom: -22,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                opacity: widget.errorText != null ? 1.0 : 0.0,
+                child: widget.errorText != null
+                    ? Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            size: 16,
+                            color: AppColors.red,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              widget.errorText!,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.red),
+                            ),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ],
         ),
       ],
     );
