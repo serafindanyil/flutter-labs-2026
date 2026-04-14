@@ -52,6 +52,7 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
       if (!mounted) return;
 
       if (user != null) {
+        AppToast.success(context, 'Успішний вхід!');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute<void>(builder: (_) => const Layout()),
           (_) => false,

@@ -61,6 +61,7 @@ class _RegisterPasswordPageState extends State<RegisterPasswordPage> {
       await AuthProvider.repository.register(user);
 
       if (!mounted) return;
+      AppToast.success(context, 'Успішна реєстрація!');
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const Layout()),
         (_) => false,

@@ -47,6 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _logout() async {
     await AuthProvider.repository.logout();
     if (!mounted) return;
+    AppToast.success(context, 'Виконано вихід з акаунту');
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const LoginEmailPage()),
       (_) => false,
@@ -56,6 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _deleteAccount() async {
     await AuthProvider.repository.deleteUser();
     if (!mounted) return;
+    AppToast.success(context, 'Ваш акаунт успішно видалено');
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const LoginEmailPage()),
       (_) => false,
