@@ -72,5 +72,5 @@ app.*.map.json
 # =========================
 # Environment
 # =========================
-.env*
+.env
 pubspec.lock
