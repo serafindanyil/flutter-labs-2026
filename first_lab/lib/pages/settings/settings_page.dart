@@ -1,11 +1,15 @@
-import 'package:first_lab/modules/auth/auth_provider.dart';
-import 'package:first_lab/modules/auth/models/user_model.dart';
+import 'package:first_lab/modules/auth/bloc/auth_bloc.dart';
+import 'package:first_lab/modules/auth/bloc/auth_event.dart';
+import 'package:first_lab/modules/auth/services/auth_service.dart';
+import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/app_toast.dart';
+import 'package:first_lab/shared/widgets/logout_dialog.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -16,11 +20,11 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  UserModel? _user;
-  bool _isLoading = true;
-  bool _isEditing = false;
   final TextEditingController _nameController = TextEditingController();
   final FocusNode _nameFocusNode = FocusNode();
+  bool _isEditing = false;
+  String _currentName = 'Користувач';
+  String _currentEmail = 'email@example.com';
 
   @override
   void initState() {
@@ -34,6 +38,15 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  void _loadUser() {
+    final user = context.read<AuthService>().currentUser;
+    if (user != null) {
+      _currentName = user.displayName ?? 'Користувач';
+      _currentEmail = user.email ?? 'no-email@example.com';
+      _nameController.text = _currentName;
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -41,41 +54,20 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  Future<void> _loadUser() async {
-    final user = await AuthProvider.repository.getCurrentUser();
-    if (mounted) {
-      setState(() {
-        _user = user;
-        if (user != null) {
-          _nameController.text = user.name;
-        }
-        _isLoading = false;
-      });
+  Future<void> _logout() async {
+    final shouldLogout = await LogoutDialog.show(context);
+    if (shouldLogout == true && mounted) {
+      context.read<AuthBloc>().add(const AuthLogoutRequested());
+      AppToast.success(context, 'Виконано вихід з акаунту');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const LoginEmailPage()),
+        (_) => false,
+      );
     }
   }
 
-  Future<void> _logout() async {
-    await AuthProvider.repository.logout();
-    if (!mounted) return;
-    AppToast.success(context, 'Виконано вихід з акаунту');
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const LoginEmailPage()),
-      (_) => false,
-    );
-  }
-
-  Future<void> _deleteAccount() async {
-    await AuthProvider.repository.deleteUser();
-    if (!mounted) return;
-    AppToast.success(context, 'Ваш акаунт успішно видалено');
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const LoginEmailPage()),
-      (_) => false,
-    );
-  }
-
   Future<void> _saveChanges() async {
-    if (_user == null || !_isEditing) return;
+    if (!_isEditing) return;
 
     final newName = _nameController.text.trim();
 
@@ -83,42 +75,40 @@ class _SettingsPageState extends State<SettingsPage> {
       AppToast.error(context, 'Некоректне ім\'я (порожнє або містить цифри)');
       setState(() {
         _isEditing = false;
-        _nameController.text = _user!.name;
+        _nameController.text = _currentName;
       });
       return;
     }
 
-    if (newName == _user!.name) {
+    if (newName == _currentName) {
       setState(() {
         _isEditing = false;
       });
       return;
     }
 
-    final updatedUser = _user!.copyWith(name: newName);
-    await AuthProvider.repository.updateUser(updatedUser);
-
-    if (mounted) {
+    if (!context.hasNetworkAccess) {
       setState(() {
-        _user = updatedUser;
+        _isEditing = false;
+        _nameController.text = _currentName;
+      });
+      return;
+    }
+
+    try {
+      context.read<AuthBloc>().add(AuthUpdateProfileRequested(name: newName));
+      setState(() {
+        _currentName = newName;
         _isEditing = false;
       });
       AppToast.success(context, 'Зміни збережено!');
+    } catch (_) {
+      AppToast.error(context, 'ПОмилка збереження');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.blue500),
-      );
-    }
-
-    if (_user == null) {
-      return const Center(child: Text('Користувача не знайдено'));
-    }
-
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -169,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       onFieldSubmitted: _saveChanges,
                     )
                   : Text(
-                      _user!.name,
+                      _currentName,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(color: AppColors.black400),
                     ),
@@ -178,7 +168,7 @@ class _SettingsPageState extends State<SettingsPage> {
             _ProfileFieldCard(
               label: 'Email',
               child: Text(
-                _user!.email,
+                _currentEmail,
                 style: Theme.of(
                   context,
                 ).textTheme.headlineSmall?.copyWith(color: AppColors.black400),
@@ -189,13 +179,6 @@ class _SettingsPageState extends State<SettingsPage> {
               title: 'Вийти з акаунту',
               onTap: _logout,
               icon: LucideIcons.logOut,
-            ),
-            const SizedBox(height: 16),
-            PrimaryButton(
-              title: 'Видалити акаунт',
-              onTap: _deleteAccount,
-              backgroundColor: AppColors.danger,
-              textColor: Colors.white,
             ),
           ],
         ),

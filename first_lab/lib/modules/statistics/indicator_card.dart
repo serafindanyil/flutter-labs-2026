@@ -4,13 +4,15 @@ import 'package:flutter/material.dart';
 
 class IndicatorCard extends StatelessWidget {
   final String title;
-  final String value;
+  final String? value;
+  final String? unit;
   final String? status;
   final Color? statusColor;
 
   const IndicatorCard({
     required this.title,
-    required this.value,
+    this.value,
+    this.unit,
     super.key,
     this.status,
     this.statusColor,
@@ -36,12 +38,28 @@ class IndicatorCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.displayLarge?.copyWith(
-              color: AppColors.blue500,
-              fontSize: 28,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value ?? '-',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  color: AppColors.blue500,
+                  fontSize: 28,
+                ),
+              ),
+              if (value != null && unit != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Text(
+                    unit!,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.blue500,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
