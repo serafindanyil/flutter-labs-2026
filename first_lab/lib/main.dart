@@ -8,6 +8,8 @@ import 'package:first_lab/modules/auth/bloc/auth_state.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/layout/layout.dart';
+import 'package:first_lab/shared/network/bloc/mqtt_cubit.dart';
+import 'package:first_lab/shared/network/bloc/mqtt_state.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/network/widgets/disabled_wrapper.dart';
@@ -57,43 +59,76 @@ class MyApp extends StatelessWidget {
           BlocProvider<NetworkCubit>(
             create: (context) => NetworkCubit(Connectivity()),
           ),
+          BlocProvider<MqttCubit>(create: (context) => MqttCubit()),
         ],
         child: BlocBuilder<NetworkCubit, NetworkState>(
           builder: (context, networkState) {
-            final isOffline = networkState.status == NetworkStatus.offline;
-            return Disabled(
-              isDisabled: isOffline,
-              child: MaterialApp(
-                title: 'SmartRecu',
-                debugShowCheckedModeBanner: false,
-                theme: AppTheme.light(),
-                builder: (context, child) {
-                  return ToastificationWrapper(
-                    child: BlocListener<NetworkCubit, NetworkState>(
-                      listenWhen: (previous, current) {
-                        if (previous.status == current.status) return false;
-                        if (previous.status == NetworkStatus.initial &&
-                            current.status == NetworkStatus.online) {
-                          return false;
-                        }
-                        return true;
-                      },
-                      listener: (context, state) {
-                        if (state.status == NetworkStatus.offline) {
-                          AppToast.warning(
-                            context,
-                            'Немає підключення до інтернету',
-                          );
-                        } else if (state.status == NetworkStatus.online) {
-                          AppToast.success(context, 'Підключення відновлено');
-                        }
-                      },
-                      child: child!,
-                    ),
-                  );
-                },
-                home: const InitialScreen(),
-              ),
+            return BlocBuilder<MqttCubit, MqttState>(
+              builder: (context, mqttState) {
+                final isOffline =
+                    networkState.status != NetworkStatus.online ||
+                    mqttState.status != MqttStatus.connected;
+                return Disabled(
+                  isDisabled: isOffline,
+                  child: MaterialApp(
+                    title: 'SmartRecu',
+                    debugShowCheckedModeBanner: false,
+                    theme: AppTheme.light(),
+                    builder: (context, child) {
+                      return ToastificationWrapper(
+                        child: MultiBlocListener(
+                          listeners: [
+                            BlocListener<NetworkCubit, NetworkState>(
+                              listenWhen: (previous, current) {
+                                if (previous.status == current.status) {
+                                  return false;
+                                }
+                                if (previous.status == NetworkStatus.initial &&
+                                    current.status == NetworkStatus.online) {
+                                  return false;
+                                }
+                                return true;
+                              },
+                              listener: (context, state) {
+                                if (state.status == NetworkStatus.offline) {
+                                  AppToast.warning(
+                                    context,
+                                    'Немає підключення до інтернету',
+                                  );
+                                } else if (state.status ==
+                                    NetworkStatus.online) {
+                                  AppToast.success(
+                                    context,
+                                    'Підключення відновлено',
+                                  );
+                                }
+                              },
+                            ),
+                            BlocListener<MqttCubit, MqttState>(
+                              listenWhen: (previous, current) =>
+                                  previous.status != current.status,
+                              listener: (context, state) {
+                                final isNetworkOnline =
+                                    context.read<NetworkCubit>().state.status ==
+                                    NetworkStatus.online;
+                                if (isNetworkOnline &&
+                                    state.status == MqttStatus.disconnected) {
+                                  AppToast.warning(
+                                    context,
+                                    'Втрачено зв\'язок з MQTT',
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                          child: child!,
+                        ),
+                      );
+                    },
+                    home: const InitialScreen(),
+                  ),
+                );
+              },
             );
           },
         ),

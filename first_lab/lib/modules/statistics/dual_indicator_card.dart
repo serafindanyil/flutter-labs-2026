@@ -6,9 +6,11 @@ class DualIndicatorCard extends StatelessWidget {
   final String title1;
   final String suffix1;
   final String value1;
+  final String? unit1;
   final String title2;
   final String suffix2;
   final String value2;
+  final String? unit2;
 
   const DualIndicatorCard({
     required this.title1,
@@ -17,6 +19,8 @@ class DualIndicatorCard extends StatelessWidget {
     required this.title2,
     required this.suffix2,
     required this.value2,
+    this.unit1,
+    this.unit2,
     super.key,
   });
 
@@ -29,6 +33,7 @@ class DualIndicatorCard extends StatelessWidget {
             title: title1,
             suffix: suffix1,
             value: value1,
+            unit: unit1,
           ),
         ),
         const SizedBox(width: 16),
@@ -37,6 +42,7 @@ class DualIndicatorCard extends StatelessWidget {
             title: title2,
             suffix: suffix2,
             value: value2,
+            unit: unit2,
           ),
         ),
       ],
@@ -48,11 +54,13 @@ class _IndicatorSubCard extends StatelessWidget {
   final String title;
   final String suffix;
   final String value;
+  final String? unit;
 
   const _IndicatorSubCard({
     required this.title,
     required this.suffix,
     required this.value,
+    this.unit,
   });
 
   @override
@@ -75,12 +83,28 @@ class _IndicatorSubCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.displayLarge?.copyWith(
-              color: AppColors.blue500,
-              fontSize: 28,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  color: AppColors.blue500,
+                  fontSize: 28,
+                ),
+              ),
+              if (unit != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 4),
+                  child: Text(
+                    unit!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.mutedText,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
