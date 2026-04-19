@@ -1,4 +1,4 @@
-import 'package:first_lab/modules/auth/auth_provider.dart';
+import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/auth/login_password_page.dart';
 import 'package:first_lab/pages/auth/register_email_page.dart';
@@ -9,6 +9,7 @@ import 'package:first_lab/shared/widgets/auth_toggle.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:first_lab/shared/widgets/primary_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginEmailPage extends StatefulWidget {
   const LoginEmailPage({super.key});
@@ -43,12 +44,15 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
     }
 
     setState(() => _isLoading = true);
-    final exists = await AuthProvider.repository.checkEmailExists(email);
+
+    final authService = context.read<AuthService>();
+    final exists = await authService.checkEmailExists(email);
+
     if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (!exists) {
-      AppToast.error(context, 'Акаунт з таким емейлом не знайдено');
+      AppToast.error(context, 'Акаунт не знайдено');
       return;
     }
 
