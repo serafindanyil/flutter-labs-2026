@@ -9,10 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    defaults:
-      run:
-        working-directory: ./first_lab
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -24,13 +20,16 @@ jobs:
           cache: true
 
       - name: Install Dependencies
+        working-directory: first_lab
         run: flutter pub get
 
       - name: Check Formatting
+        working-directory: first_lab
         run: dart format --set-exit-if-changed .
 
       - name: Run Analysis
         uses: invertase/github-action-dart-analyzer@v1
         with:
           fatal-infos: true
-          working-directory: ./first_lab
+          fatal-warnings: true
+          working-directory: first_lab
