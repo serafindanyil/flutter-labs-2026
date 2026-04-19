@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:toastification/toastification.dart';
 
-enum ToastType { success, error }
+enum ToastType { success, error, warning }
 
 class AppToast {
   static String? _lastMessage;
@@ -25,13 +25,23 @@ class AppToast {
     _lastMessage = message;
     _lastTime = now;
 
-    final backgroundColor = type == ToastType.error
-        ? AppColors.danger
-        : AppColors.success;
+    final backgroundColor = switch (type) {
+      ToastType.success => AppColors.success,
+      ToastType.warning => AppColors.warning,
+      ToastType.error => AppColors.danger,
+    };
 
-    final icon = type == ToastType.error
-        ? LucideIcons.triangleAlert
-        : LucideIcons.check;
+    final icon = switch (type) {
+      ToastType.success => LucideIcons.check,
+      ToastType.warning => LucideIcons.triangleAlert,
+      ToastType.error => LucideIcons.circleAlert,
+    };
+
+    final toastType = switch (type) {
+      ToastType.success => ToastificationType.success,
+      ToastType.warning => ToastificationType.warning,
+      ToastType.error => ToastificationType.error,
+    };
 
     toastification.show(
       context: context,
@@ -42,9 +52,7 @@ class AppToast {
           fontWeight: FontWeight.w500,
         ),
       ),
-      type: type == ToastType.error
-          ? ToastificationType.error
-          : ToastificationType.success,
+      type: toastType,
       style: ToastificationStyle.fillColored,
       autoCloseDuration: duration,
       icon: Icon(icon, color: AppColors.white, size: 20),
@@ -88,4 +96,7 @@ class AppToast {
 
   static void success(BuildContext context, String message) =>
       show(context, message: message, type: ToastType.success);
+
+  static void warning(BuildContext context, String message) =>
+      show(context, message: message, type: ToastType.warning);
 }

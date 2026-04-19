@@ -1,4 +1,5 @@
 import 'package:first_lab/modules/auth/services/auth_service.dart';
+import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/auth/login_password_page.dart';
 import 'package:first_lab/pages/auth/register_email_page.dart';
@@ -42,6 +43,8 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       setState(() => _errorText = 'Невірний формат емейлу');
       return;
     }
+
+    if (!context.hasNetworkAccess) return;
 
     setState(() => _isLoading = true);
 

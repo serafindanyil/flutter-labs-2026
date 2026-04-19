@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:first_lab/firebase_options.dart';
@@ -7,12 +8,17 @@ import 'package:first_lab/modules/auth/bloc/auth_state.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/layout/layout.dart';
+import 'package:first_lab/shared/network/bloc/network_cubit.dart';
+import 'package:first_lab/shared/network/bloc/network_state.dart';
+import 'package:first_lab/shared/network/widgets/disabled_wrapper.dart';
 import 'package:first_lab/shared/storage/secure_storage_service.dart';
 import 'package:first_lab/shared/theme/app_theme.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:toastification/toastification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,16 +46,56 @@ class MyApp extends StatelessWidget {
               const SecureStorageService(secureStorage: FlutterSecureStorage()),
         ),
       ],
-      child: BlocProvider<AuthBloc>(
-        create: (context) => AuthBloc(
-          authService: context.read<AuthService>(),
-          storageService: context.read<StorageService>(),
-        )..add(const AuthCheckRequested()),
-        child: MaterialApp(
-          title: 'SmartRecu',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(),
-          home: const InitialScreen(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (context) => AuthBloc(
+              authService: context.read<AuthService>(),
+              storageService: context.read<StorageService>(),
+            )..add(const AuthCheckRequested()),
+          ),
+          BlocProvider<NetworkCubit>(
+            create: (context) => NetworkCubit(Connectivity()),
+          ),
+        ],
+        child: BlocBuilder<NetworkCubit, NetworkState>(
+          builder: (context, networkState) {
+            final isOffline = networkState.status == NetworkStatus.offline;
+            return Disabled(
+              isDisabled: isOffline,
+              child: MaterialApp(
+                title: 'SmartRecu',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.light(),
+                builder: (context, child) {
+                  return ToastificationWrapper(
+                    child: BlocListener<NetworkCubit, NetworkState>(
+                      listenWhen: (previous, current) {
+                        if (previous.status == current.status) return false;
+                        if (previous.status == NetworkStatus.initial &&
+                            current.status == NetworkStatus.online) {
+                          return false;
+                        }
+                        return true;
+                      },
+                      listener: (context, state) {
+                        if (state.status == NetworkStatus.offline) {
+                          AppToast.warning(
+                            context,
+                            'Немає підключення до інтернету',
+                          );
+                        } else if (state.status == NetworkStatus.online) {
+                          AppToast.success(context, 'Підключення відновлено');
+                        }
+                      },
+                      child: child!,
+                    ),
+                  );
+                },
+                home: const InitialScreen(),
+              ),
+            );
+          },
         ),
       ),
     );

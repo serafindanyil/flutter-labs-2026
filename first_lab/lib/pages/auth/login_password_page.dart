@@ -1,6 +1,7 @@
 import 'package:first_lab/modules/auth/bloc/auth_bloc.dart';
 import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/bloc/auth_state.dart';
+import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
@@ -45,6 +46,8 @@ class _LoginPasswordPageState extends State<LoginPasswordPage> {
       );
       return;
     }
+
+    if (!context.hasNetworkAccess) return;
 
     context.read<AuthBloc>().add(
       AuthLoginRequested(email: widget.email, password: password),

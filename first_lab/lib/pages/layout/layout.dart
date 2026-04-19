@@ -1,6 +1,7 @@
 import 'package:first_lab/pages/home/home_page.dart';
 import 'package:first_lab/pages/settings/settings_page.dart';
 import 'package:first_lab/pages/statistics/statistics_page.dart';
+import 'package:first_lab/shared/network/widgets/disabled_wrapper.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/styles/app_shadows.dart';
 import 'package:flutter/material.dart';
@@ -45,42 +46,66 @@ class _LayoutState extends State<Layout> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.zero,
+          child: Disabled(
+            isDisabled: Disabled.of(context),
+            child: _NavBar(
+              currentIndex: _currentIndex,
+              onTabTapped: _onTabTapped,
+              disabled: Disabled.of(context),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavBar extends StatelessWidget {
+  const _NavBar({
+    required this.currentIndex,
+    required this.onTabTapped,
+    this.disabled = false,
+  });
+
+  final int currentIndex;
+  final ValueChanged<int> onTabTapped;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 200,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: AppShadows.button,
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Container(
-                width: 200,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(40),
-                  boxShadow: AppShadows.button,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _BottomNavItem(
-                      icon: LucideIcons.house,
-                      isSelected: _currentIndex == 0,
-                      onTap: () => _onTabTapped(0),
-                    ),
-                    _BottomNavItem(
-                      icon: LucideIcons.chartColumnBig,
-                      isSelected: _currentIndex == 1,
-                      onTap: () => _onTabTapped(1),
-                    ),
-                    _BottomNavItem(
-                      icon: LucideIcons.settings,
-                      isSelected: _currentIndex == 2,
-                      onTap: () => _onTabTapped(2),
-                    ),
-                  ],
-                ),
+              _BottomNavItem(
+                icon: LucideIcons.house,
+                isSelected: currentIndex == 0,
+                onTap: () => onTabTapped(0),
+              ),
+              _BottomNavItem(
+                icon: LucideIcons.chartColumnBig,
+                isSelected: currentIndex == 1,
+                onTap: () => onTabTapped(1),
+              ),
+              _BottomNavItem(
+                icon: LucideIcons.settings,
+                isSelected: currentIndex == 2,
+                onTap: () => onTabTapped(2),
               ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -90,6 +115,8 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDisabled = Disabled.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Container(
@@ -119,9 +146,9 @@ class _Header extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'Online',
+              isDisabled ? 'Offline' : 'Online',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.blue500,
+                color: isDisabled ? AppColors.danger : AppColors.blue500,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -145,14 +172,15 @@ class _BottomNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDisabled = Disabled.of(context);
+    final color = isDisabled
+        ? AppColors.gray400
+        : (isSelected ? AppColors.blue500 : AppColors.blue300);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Icon(
-        icon,
-        size: 32,
-        color: isSelected ? AppColors.blue500 : AppColors.blue300,
-      ),
+      child: Icon(icon, size: 32, color: color),
     );
   }
 }
