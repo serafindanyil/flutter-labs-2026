@@ -21,7 +21,9 @@ jobs:
 
       - name: Install Dependencies
         working-directory: first_lab
-        run: flutter pub get
+        run: |
+          cp .env.example .env
+          flutter pub get
 
       - name: Check Formatting
         working-directory: first_lab
