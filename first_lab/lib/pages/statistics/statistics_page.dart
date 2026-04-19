@@ -61,7 +61,11 @@ class StatisticsPage extends StatelessWidget {
         //   unit: 'rpm',
         // ),
         // const SizedBox(height: 16),
-        // const IndicatorCard(title: 'ККД рекуператора', value: '60', unit: '%'),
+        // const IndicatorCard(
+        //   title: 'ККД рекуператора',
+        //   value: '60',
+        //   unit: '%',
+        // ),
         // const SizedBox(height: 16),
         // const DualIndicatorCard(
         //   title1: 'Темп',
