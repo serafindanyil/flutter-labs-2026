@@ -54,7 +54,7 @@ class IndicatorCard extends StatelessWidget {
                   child: Text(
                     unit!,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.mutedText,
+                      color: AppColors.blue500,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
