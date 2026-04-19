@@ -42,9 +42,7 @@ class FirebaseAuthService implements AuthService {
       if (e.code == 'email-already-in-use') {
         return true;
       }
-      return false;
-    } catch (_) {
-      return false;
+      rethrow;
     }
   }
 

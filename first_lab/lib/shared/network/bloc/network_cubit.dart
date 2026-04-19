@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
@@ -16,11 +17,25 @@ class NetworkCubit extends Cubit<NetworkState> {
     _subscription = _connectivity.onConnectivityChanged.listen(_updateStatus);
   }
 
-  void _updateStatus(List<ConnectivityResult> results) {
-    if (results.contains(ConnectivityResult.none) || results.isEmpty) {
+  Future<void> _updateStatus(List<ConnectivityResult> results) async {
+    final hasInterface =
+        results.isNotEmpty &&
+        !results.every((r) => r == ConnectivityResult.none);
+
+    if (!hasInterface) {
       emit(state.copyWith(status: NetworkStatus.offline));
-    } else {
-      emit(state.copyWith(status: NetworkStatus.online));
+      return;
+    }
+
+    try {
+      final lookupResult = await InternetAddress.lookup('google.com');
+      if (lookupResult.isNotEmpty && lookupResult[0].rawAddress.isNotEmpty) {
+        emit(state.copyWith(status: NetworkStatus.online));
+      } else {
+        emit(state.copyWith(status: NetworkStatus.offline));
+      }
+    } on SocketException catch (_) {
+      emit(state.copyWith(status: NetworkStatus.offline));
     }
   }
 

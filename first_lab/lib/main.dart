@@ -143,6 +143,25 @@ class InitialScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
+      buildWhen: (previous, current) {
+        if (previous is AuthInitial && current is AuthSuccess) {
+          return true;
+        }
+        if (previous is AuthInitial && current is AuthUnauthenticated) {
+          return true;
+        }
+        if (previous is AuthSuccess && current is AuthUnauthenticated) {
+          return true;
+        }
+        if (previous is AuthUnauthenticated && current is AuthSuccess) {
+          return true;
+        }
+        if (previous is AuthInProgress && current is AuthSuccess) {
+          return true;
+        }
+
+        return false;
+      },
       builder: (context, state) {
         if (state is AuthSuccess) {
           return const Layout();

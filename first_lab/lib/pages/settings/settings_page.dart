@@ -1,6 +1,7 @@
 import 'package:first_lab/modules/auth/bloc/auth_bloc.dart';
 import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
+import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/app_toast.dart';
@@ -82,6 +83,14 @@ class _SettingsPageState extends State<SettingsPage> {
     if (newName == _currentName) {
       setState(() {
         _isEditing = false;
+      });
+      return;
+    }
+
+    if (!context.hasNetworkAccess) {
+      setState(() {
+        _isEditing = false;
+        _nameController.text = _currentName;
       });
       return;
     }

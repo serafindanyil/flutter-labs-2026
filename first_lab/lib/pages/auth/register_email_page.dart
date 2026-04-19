@@ -69,21 +69,27 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
 
     // Check if email is already taken
     final authService = context.read<AuthService>();
-    final exists = await authService.checkEmailExists(email);
+    try {
+      final exists = await authService.checkEmailExists(email);
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    if (exists) {
-      AppToast.error(context, 'Цей емейл вже зайнятий');
-      return;
+      if (exists) {
+        AppToast.error(context, 'Цей емейл вже зайнятий');
+        return;
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => RegisterPasswordPage(name: name, email: email),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      AppToast.error(context, 'Помилка підключення. Перевірте інтернет.');
     }
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => RegisterPasswordPage(name: name, email: email),
-      ),
-    );
   }
 
   void _onLoginTap() {

@@ -49,19 +49,27 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
     setState(() => _isLoading = true);
 
     final authService = context.read<AuthService>();
-    final exists = await authService.checkEmailExists(email);
+    try {
+      final exists = await authService.checkEmailExists(email);
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    if (!exists) {
-      AppToast.error(context, 'Акаунт не знайдено');
-      return;
+      if (!exists) {
+        AppToast.error(context, 'Акаунт не знайдено');
+        return;
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => LoginPasswordPage(email: email),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      AppToast.error(context, 'Помилка підключення. Перевірте інтернет.');
     }
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => LoginPasswordPage(email: email)),
-    );
   }
 
   void _onRegisterTap() {
