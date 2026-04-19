@@ -60,7 +60,7 @@ class _LayoutState extends State<Layout> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _BottomNavItem(
-                      icon: LucideIcons.home,
+                      icon: LucideIcons.house,
                       isSelected: _currentIndex == 0,
                       onTap: () => _onTabTapped(0),
                     ),

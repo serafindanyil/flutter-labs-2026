@@ -40,7 +40,7 @@ class IndicatorCard extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
               color: AppColors.blue500,
-              fontSize: 32,
+              fontSize: 28,
             ),
           ),
         ],

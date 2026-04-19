@@ -1,8 +1,10 @@
+import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/auth/login_password_page.dart';
 import 'package:first_lab/pages/auth/register_email_page.dart';
 import 'package:first_lab/shared/constants/app_constants.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/auth_toggle.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:first_lab/shared/widgets/primary_text_field.dart';
@@ -18,6 +20,7 @@ class LoginEmailPage extends StatefulWidget {
 class _LoginEmailPageState extends State<LoginEmailPage> {
   final TextEditingController _controller = TextEditingController();
   String? _errorText;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -25,7 +28,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
     super.dispose();
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     setState(() => _errorText = null);
     final email = _controller.text.trim();
 
@@ -39,9 +42,19 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const LoginPasswordPage()));
+    setState(() => _isLoading = true);
+    final exists = await AuthProvider.repository.checkEmailExists(email);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (!exists) {
+      AppToast.error(context, 'Акаунт з таким емейлом не знайдено');
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LoginPasswordPage(email: email)),
+    );
   }
 
   void _onRegisterTap() {
@@ -57,7 +70,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       subtitle: 'Отримайте доступ до свого акаунту',
       children: [
         Text('Емейл', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'example@mail.com',
           controller: _controller,
@@ -66,7 +79,11 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        PrimaryButton(title: 'Продовжити', onTap: _onNext),
+        PrimaryButton(
+          title: 'Продовжити',
+          onTap: _onNext,
+          isLoading: _isLoading,
+        ),
         const SizedBox(height: AuthConstants.spacingMedium),
         AuthToggle(
           text: 'Немає акаунту? ',

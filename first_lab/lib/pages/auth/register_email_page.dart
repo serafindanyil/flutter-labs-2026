@@ -1,8 +1,10 @@
+import 'package:first_lab/modules/auth/auth_provider.dart';
 import 'package:first_lab/modules/auth/widgets/auth_layout.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/auth/register_password_page.dart';
 import 'package:first_lab/shared/constants/app_constants.dart';
 import 'package:first_lab/shared/constants/auth_constants.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/auth_toggle.dart';
 import 'package:first_lab/shared/widgets/primary_button.dart';
 import 'package:first_lab/shared/widgets/primary_text_field.dart';
@@ -16,31 +18,63 @@ class RegisterEmailPage extends StatefulWidget {
 }
 
 class _RegisterEmailPageState extends State<RegisterEmailPage> {
-  final TextEditingController _controller = TextEditingController();
-  String? _errorText;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+
+  String? _nameErrorText;
+  String? _emailErrorText;
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  void _onNext() {
-    setState(() => _errorText = null);
-    final email = _controller.text.trim();
+  Future<void> _onNext() async {
+    setState(() {
+      _nameErrorText = null;
+      _emailErrorText = null;
+    });
 
-    if (email.isEmpty) {
-      setState(() => _errorText = 'Емейл не може бути порожнім');
-      return;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+
+    bool hasError = false;
+
+    if (name.isEmpty) {
+      setState(() => _nameErrorText = 'Ім\'я не може бути порожнім');
+      hasError = true;
+    } else if (RegExp(r'\d').hasMatch(name)) {
+      setState(() => _nameErrorText = 'Ім\'я не може містити цифри');
+      hasError = true;
     }
 
-    if (!RegExp(AppConstants.emailRegex).hasMatch(email)) {
-      setState(() => _errorText = 'Невірний формат емейлу');
+    if (email.isEmpty) {
+      setState(() => _emailErrorText = 'Емейл не може бути порожнім');
+      hasError = true;
+    } else if (!RegExp(AppConstants.emailRegex).hasMatch(email)) {
+      setState(() => _emailErrorText = 'Невірний формат емейлу');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    setState(() => _isLoading = true);
+    final exists = await AuthProvider.repository.checkEmailExists(email);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (exists) {
+      AppToast.error(context, 'Цей емейл вже зареєстровано');
       return;
     }
 
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const RegisterPasswordPage()),
+      MaterialPageRoute<void>(
+        builder: (_) => RegisterPasswordPage(name: name, email: email),
+      ),
     );
   }
 
@@ -56,17 +90,34 @@ class _RegisterEmailPageState extends State<RegisterEmailPage> {
       title: 'Створити акаунт',
       subtitle: 'Приєднайтесь до нас, коли небудь',
       children: [
+        Text(
+          'Введіть ваше ім\'я',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
+        PrimaryTextField(
+          hintText: 'Ім\'я',
+          controller: _nameController,
+          errorText: _nameErrorText,
+          keyboardType: TextInputType.name,
+          onFieldSubmitted: _onNext,
+        ),
+        const SizedBox(height: AuthConstants.spacingMedium),
         Text('Емейл', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AuthConstants.spacingSmall),
+        const SizedBox(height: AuthConstants.spacingXXSmall),
         PrimaryTextField(
           hintText: 'example@mail.com',
-          controller: _controller,
+          controller: _emailController,
           keyboardType: TextInputType.emailAddress,
-          errorText: _errorText,
+          errorText: _emailErrorText,
           onFieldSubmitted: _onNext,
         ),
         const SizedBox(height: AuthConstants.spacingLarge),
-        PrimaryButton(title: 'Продовжити', onTap: _onNext),
+        PrimaryButton(
+          title: 'Продовжити',
+          onTap: _onNext,
+          isLoading: _isLoading,
+        ),
         const SizedBox(height: AuthConstants.spacingMedium),
         AuthToggle(
           text: 'Вже є акаунт? ',
