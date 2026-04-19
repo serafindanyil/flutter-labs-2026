@@ -7,9 +7,7 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
 class MqttCubit extends Cubit<MqttState> {
-  MqttCubit() : super(const MqttState()) {
-    _initConnection();
-  }
+  MqttCubit() : super(const MqttState());
 
   static const String _co2Topic = 'sensor/co2';
 
@@ -17,7 +15,12 @@ class MqttCubit extends Cubit<MqttState> {
   StreamSubscription<List<MqttReceivedMessage<MqttMessage>>>?
   _updatesSubscription;
 
-  Future<void> _initConnection() async {
+  Future<void> connect() async {
+    if (state.status == MqttStatus.connecting ||
+        state.status == MqttStatus.connected) {
+      return;
+    }
+
     emit(state.copyWith(status: MqttStatus.connecting));
 
     final client = _createClient();

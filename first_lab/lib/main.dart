@@ -91,16 +91,53 @@ class MyApp extends StatelessWidget {
                               },
                               listener: (context, state) {
                                 if (state.status == NetworkStatus.offline) {
+                                  context.read<MqttCubit>().disconnect();
                                   AppToast.warning(
                                     context,
                                     'Немає підключення до інтернету',
                                   );
                                 } else if (state.status ==
                                     NetworkStatus.online) {
+                                  if (context.read<AuthBloc>().state
+                                      is AuthSuccess) {
+                                    context.read<MqttCubit>().connect();
+                                  }
                                   AppToast.success(
                                     context,
                                     'Підключення відновлено',
                                   );
+                                }
+                              },
+                            ),
+                            BlocListener<AuthBloc, AuthState>(
+                              listenWhen: (previous, current) {
+                                if (previous is AuthInitial &&
+                                    current is AuthSuccess) {
+                                  return true;
+                                }
+                                if (previous is AuthInProgress &&
+                                    current is AuthSuccess) {
+                                  return true;
+                                }
+                                if (previous is AuthSuccess &&
+                                    current is AuthUnauthenticated) {
+                                  return true;
+                                }
+                                return false;
+                              },
+                              listener: (context, state) {
+                                if (state is AuthSuccess) {
+                                  final isOnline =
+                                      context
+                                          .read<NetworkCubit>()
+                                          .state
+                                          .status ==
+                                      NetworkStatus.online;
+                                  if (isOnline) {
+                                    context.read<MqttCubit>().connect();
+                                  }
+                                } else if (state is AuthUnauthenticated) {
+                                  context.read<MqttCubit>().disconnect();
                                 }
                               },
                             ),
