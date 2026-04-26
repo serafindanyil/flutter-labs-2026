@@ -10,6 +10,7 @@ analyzer:
     dead_code: error
     unused_import: error
     unused_element: ignore
+    asset_does_not_exist: ignore
 
 linter:
   rules:
