@@ -1,0 +1,183 @@
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from "@nestjs/websockets";
+import { OnEvent } from "@nestjs/event-emitter";
+import { DEFAULT_HISTORY_LIMIT } from "../../shared/constants/app.constants";
+import { DEVICE_MESSAGE_TYPE } from "../../shared/constants/realtime.constants";
+import { EVENT_NAMES } from "../../shared/events/event-names";
+import {
+  DEVICE_COMMAND_SENDER_TOKEN,
+  DEVICE_STATE_READER_TOKEN,
+  FIREBASE_AUTH_VERIFIER_TOKEN,
+} from "../../shared/tokens/di.tokens";
+import { isRecord } from "../../shared/utils/is-record";
+import type { FrontendBroadcast } from "../../shared/types/realtime.types";
+import type { FirebaseAuthVerifier } from "../auth/auth.types";
+import {
+  parseBooleanPayload,
+  parseModePayload,
+  parseSpeedPayload,
+} from "../device/domain/device-message.parser";
+import type { DeviceCommandSender, DeviceStateReader } from "../device/domain/device-ports";
+import { SensorsService } from "../sensors/sensors.service";
+import type { FrontendSocket, FrontendSocketServer } from "./realtime.types";
+
+function extractBearerToken(value: string | undefined): string | null {
+  if (value === undefined) return null;
+  const [scheme, token] = value.split(" ");
+  if (scheme !== "Bearer" || token === undefined || token.trim() === "") return null;
+  return token;
+}
+
+function extractHandshakeToken(client: FrontendSocket): string | null {
+  const auth = client.handshake.auth;
+
+  if (isRecord(auth) && typeof auth.token === "string" && auth.token.trim() !== "") {
+    return auth.token;
+  }
+
+  return extractBearerToken(client.handshake.headers.authorization);
+}
+
+function isAuthenticated(client: FrontendSocket): boolean {
+  return client.data.user !== undefined;
+}
+
+@Injectable()
+@WebSocketGateway({
+  cors: { origin: true },
+})
+export class RealtimeGateway implements OnGatewayConnection {
+  private readonly logger = new Logger(RealtimeGateway.name);
+
+  @WebSocketServer()
+  private server!: FrontendSocketServer;
+
+  constructor(
+    @Inject(FIREBASE_AUTH_VERIFIER_TOKEN) private readonly verifier: FirebaseAuthVerifier,
+    @Inject(DEVICE_COMMAND_SENDER_TOKEN) private readonly commandSender: DeviceCommandSender,
+    @Inject(DEVICE_STATE_READER_TOKEN) private readonly stateReader: DeviceStateReader,
+    private readonly sensorsService: SensorsService,
+  ) {}
+
+  async handleConnection(client: FrontendSocket): Promise<void> {
+    const token = extractHandshakeToken(client);
+
+    if (token === null) {
+      client.disconnect(true);
+      return;
+    }
+
+    try {
+      client.data.user = await this.verifier.verifyToken(token);
+    } catch {
+      this.logger.warn("Socket.IO client rejected by Firebase auth");
+      client.disconnect(true);
+    }
+  }
+
+  @SubscribeMessage(DEVICE_MESSAGE_TYPE.IDENTIFY)
+  async handleIdentify(@ConnectedSocket() client: FrontendSocket): Promise<void> {
+    if (!isAuthenticated(client)) return;
+    client.emit(DEVICE_MESSAGE_TYPE.SETUP, this.stateReader.getSetupPayload());
+    client.emit(DEVICE_MESSAGE_TYPE.STATUS, this.stateReader.getStatus());
+    client.emit(DEVICE_MESSAGE_TYPE.SENSOR_HISTORY, await this.sensorsService.getHistory(DEFAULT_HISTORY_LIMIT));
+  }
+
+  @SubscribeMessage(DEVICE_MESSAGE_TYPE.SWITCH_STATE)
+  handleSwitchState(
+    @ConnectedSocket() client: FrontendSocket,
+    @MessageBody() data: unknown,
+  ): void {
+    if (!isAuthenticated(client)) return;
+    const payload = parseBooleanPayload(data);
+    if (payload === null) return;
+    this.commandSender.sendSwitchState(payload);
+  }
+
+  @SubscribeMessage(DEVICE_MESSAGE_TYPE.CHANGE_MODE)
+  handleMode(
+    @ConnectedSocket() client: FrontendSocket,
+    @MessageBody() data: unknown,
+  ): void {
+    if (!isAuthenticated(client)) return;
+    const payload = parseModePayload(data);
+    if (payload === null) return;
+    this.commandSender.sendMode(payload);
+  }
+
+  @SubscribeMessage(DEVICE_MESSAGE_TYPE.CHANGE_FAN_IN_SPEED)
+  handleFanInSpeed(
+    @ConnectedSocket() client: FrontendSocket,
+    @MessageBody() data: unknown,
+  ): void {
+    if (!isAuthenticated(client)) return;
+    const payload = parseSpeedPayload(data);
+    if (payload === null) return;
+    this.commandSender.sendFanInSpeed(payload);
+  }
+
+  @SubscribeMessage(DEVICE_MESSAGE_TYPE.CHANGE_FAN_OUT_SPEED)
+  handleFanOutSpeed(
+    @ConnectedSocket() client: FrontendSocket,
+    @MessageBody() data: unknown,
+  ): void {
+    if (!isAuthenticated(client)) return;
+    const payload = parseSpeedPayload(data);
+    if (payload === null) return;
+    this.commandSender.sendFanOutSpeed(payload);
+  }
+
+  @SubscribeMessage(DEVICE_MESSAGE_TYPE.PING)
+  handlePing(@ConnectedSocket() client: FrontendSocket): void {
+    if (!isAuthenticated(client)) return;
+    client.emit(DEVICE_MESSAGE_TYPE.PONG, { time: Date.now() });
+  }
+
+  @OnEvent(EVENT_NAMES.FRONTEND_BROADCAST)
+  handleBroadcast(payload: FrontendBroadcast): void {
+    switch (payload.type) {
+      case DEVICE_MESSAGE_TYPE.SETUP:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.SETUP, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.STATUS:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.STATUS, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.SENSOR_HISTORY:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.SENSOR_HISTORY, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.UPDATE:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.UPDATE, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.SWITCH_STATE:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.SWITCH_STATE, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.CHANGE_MODE:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.CHANGE_MODE, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.CHANGE_FAN_IN_SPEED:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.CHANGE_FAN_IN_SPEED, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.CHANGE_FAN_OUT_SPEED:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.CHANGE_FAN_OUT_SPEED, payload.data));
+        break;
+      case DEVICE_MESSAGE_TYPE.PONG:
+        this.emitToAuthenticated((client) => client.emit(DEVICE_MESSAGE_TYPE.PONG, payload.data));
+        break;
+    }
+  }
+
+  private emitToAuthenticated(handler: (client: FrontendSocket) => void): void {
+    for (const client of this.server.sockets.sockets.values()) {
+      if (isAuthenticated(client)) {
+        handler(client);
+      }
+    }
+  }
+}

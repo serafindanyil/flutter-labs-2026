@@ -1,0 +1,14 @@
+export const DEFAULT_PORT = 3000;
+export const DEFAULT_HOST = "0.0.0.0";
+export const DEFAULT_HISTORY_LIMIT = 20;
+export const MIN_HISTORY_LIMIT = 1;
+export const MAX_HISTORY_LIMIT = 100;
+export const ESP32_TIMEOUT_MS = 3_000;
+export const STATUS_CHECK_INTERVAL_MS = 2_000;
+export const HEARTBEAT_INTERVAL_MS = 30_000;
+export const SENSOR_PERSIST_INTERVAL_MS = 120_000;
+export const ANALYTICS_REFRESH_INTERVAL_MS = 300_000;
+export const RAW_WS_PATH = "/ws";
+export const SWAGGER_PATH = "docs";
+export const SWAGGER_JSON_PATH = "docs-json";
+export const FIREBASE_PRIVATE_KEY_NEWLINE = /\\n/g;
