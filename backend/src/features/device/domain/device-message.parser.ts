@@ -1,10 +1,19 @@
 import { DEVICE_KIND, DEVICE_MODE } from "../../../shared/constants/realtime.constants";
+import { MAX_FAN_SPEED_PERCENT, MIN_FAN_SPEED_PERCENT } from "../../../shared/constants/app.constants";
 import { isRecord } from "../../../shared/utils/is-record";
 import type { DeviceMode } from "../../../shared/types/realtime.types";
 import type { DeviceClientEnvelope, DeviceInitPayload, DeviceSensorUpdate } from "./device-message.types";
 
 function getFiniteNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function getFiniteNumberLike(value: unknown): number | null {
+  if (typeof value === "number") return getFiniteNumber(value);
+  if (typeof value !== "string" || value.trim() === "") return null;
+
+  const parsed = Number(value);
+  return getFiniteNumber(parsed);
 }
 
 export function parseDeviceEnvelope(value: unknown): DeviceClientEnvelope | null {
@@ -81,5 +90,13 @@ export function parseModePayload(value: unknown): DeviceMode | null {
 }
 
 export function parseSpeedPayload(value: unknown): number | null {
-  return getFiniteNumber(value);
+  const speed = parseSpeedValue(value);
+  if (speed === null) return null;
+  if (!Number.isInteger(speed)) return null;
+  if (speed < MIN_FAN_SPEED_PERCENT || speed > MAX_FAN_SPEED_PERCENT) return null;
+  return speed;
+}
+
+function parseSpeedValue(value: unknown): number | null {
+  return getFiniteNumberLike(value);
 }

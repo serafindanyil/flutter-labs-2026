@@ -1,29 +1,26 @@
 import { Injectable } from "@nestjs/common";
 import { WebSocket } from "ws";
-import { ESP32_TIMEOUT_MS } from "../../../shared/constants/app.constants";
 import { DEVICE_KIND, DEVICE_MESSAGE_TYPE } from "../../../shared/constants/realtime.constants";
 import type { DeviceMode } from "../../../shared/types/realtime.types";
 import type { DeviceActivityReader, DeviceCommandSender } from "../domain/device-ports";
 
 @Injectable()
 export class DeviceConnectionRegistry implements DeviceCommandSender, DeviceActivityReader {
-  private readonly esp32LastUpdate = new Map<WebSocket, number>();
+  private readonly esp32Clients = new Set<WebSocket>();
   private readonly aliveClients = new WeakMap<WebSocket, boolean>();
 
   registerEsp32(client: WebSocket): void {
-    if (!this.esp32LastUpdate.has(client)) {
-      this.esp32LastUpdate.set(client, 0);
-    }
+    this.esp32Clients.add(client);
     this.markHeartbeatAlive(client);
   }
 
   touchEsp32(client: WebSocket): void {
-    this.esp32LastUpdate.set(client, Date.now());
+    this.registerEsp32(client);
     this.markHeartbeatAlive(client);
   }
 
   remove(client: WebSocket): void {
-    this.esp32LastUpdate.delete(client);
+    this.esp32Clients.delete(client);
   }
 
   markHeartbeatAlive(client: WebSocket): void {
@@ -39,12 +36,10 @@ export class DeviceConnectionRegistry implements DeviceCommandSender, DeviceActi
   }
 
   hasActiveEsp32(): boolean {
-    const currentTime = Date.now();
-
-    for (const [client, lastUpdate] of this.esp32LastUpdate.entries()) {
-      const isOpen = client.readyState === WebSocket.OPEN;
-      const isRecent = currentTime - lastUpdate < ESP32_TIMEOUT_MS;
-      if (isOpen && isRecent) return true;
+    for (const client of this.esp32Clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        return true;
+      }
     }
 
     return false;
@@ -73,7 +68,7 @@ export class DeviceConnectionRegistry implements DeviceCommandSender, DeviceActi
       data,
     });
 
-    for (const client of this.esp32LastUpdate.keys()) {
+    for (const client of this.esp32Clients) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
       }

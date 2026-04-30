@@ -5,8 +5,13 @@ export const DEVICE_KIND = {
 } as const;
 
 export const DEVICE_STATUS = {
-  ONLINE: "Online",
-  OFFLINE: "Offline",
+  ONLINE: "online",
+  OFFLINE: "offline",
+} as const;
+
+export const DEVICE_POWER_STATE = {
+  ON: "on",
+  OFF: "off",
 } as const;
 
 export const DEVICE_MESSAGE_TYPE = {
@@ -20,7 +25,8 @@ export const DEVICE_MESSAGE_TYPE = {
   IDENTIFY: "identify",
   SETUP: "setup",
   STATUS: "status",
-  SENSOR_HISTORY: "sensorHistory",
+  UPDATE_STATUS: "updateStatus",
+  SENSORS: "sensors",
   PONG: "pong",
 } as const;
 
