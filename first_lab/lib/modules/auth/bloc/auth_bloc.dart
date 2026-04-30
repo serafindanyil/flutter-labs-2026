@@ -22,6 +22,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthService _authService;
   final StorageService _storageService;
 
+  String _authErrorMessage(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+      case 'user-not-found':
+        return 'Невірний емейл або пароль';
+      case 'invalid-email':
+        return 'Невірний формат емейлу';
+      case 'user-disabled':
+        return 'Цей акаунт заблоковано';
+      case 'email-already-in-use':
+        return 'Цей емейл вже зайнятий';
+      case 'weak-password':
+        return 'Пароль занадто слабкий';
+      case 'operation-not-allowed':
+        return 'Вхід через емейл і пароль вимкнено у Firebase';
+      case 'network-request-failed':
+        return 'Помилка мережі. Перевірте підключення до інтернету';
+      default:
+        return error.message ?? 'Помилка авторизації';
+    }
+  }
+
   Future<void> _onAuthCheckRequested(
     AuthCheckRequested event,
     Emitter<AuthState> emit,
@@ -57,7 +80,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthFailure('Token generation failed'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AuthFailure(e.message ?? 'Unknown authentication error'));
+      emit(AuthFailure(_authErrorMessage(e)));
     } catch (_) {
       emit(const AuthFailure('An unexpected error occurred'));
     }
@@ -83,7 +106,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthFailure('Token generation failed'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AuthFailure(e.message ?? 'Unknown authentication error'));
+      emit(AuthFailure(_authErrorMessage(e)));
     } catch (_) {
       emit(const AuthFailure('An unexpected error occurred'));
     }
@@ -98,7 +121,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authService.updateDisplayName(event.name);
       emit(const AuthSuccess());
     } on FirebaseAuthException catch (e) {
-      emit(AuthFailure(e.message ?? 'Update error'));
+      emit(AuthFailure(_authErrorMessage(e)));
     } catch (_) {
       emit(const AuthFailure('An unexpected error occurred'));
     }

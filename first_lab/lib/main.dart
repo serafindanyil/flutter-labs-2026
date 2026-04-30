@@ -6,13 +6,13 @@ import 'package:first_lab/modules/auth/bloc/auth_bloc.dart';
 import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/bloc/auth_state.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
+import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/layout/layout.dart';
-import 'package:first_lab/shared/network/bloc/mqtt_cubit.dart';
-import 'package:first_lab/shared/network/bloc/mqtt_state.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/network/widgets/disabled_wrapper.dart';
+import 'package:first_lab/shared/realtime/realtime_module.dart';
 import 'package:first_lab/shared/storage/secure_storage_service.dart';
 import 'package:first_lab/shared/theme/app_theme.dart';
 import 'package:first_lab/shared/widgets/app_toast.dart';
@@ -59,113 +59,99 @@ class MyApp extends StatelessWidget {
           BlocProvider<NetworkCubit>(
             create: (context) => NetworkCubit(Connectivity()),
           ),
-          BlocProvider<MqttCubit>(create: (context) => MqttCubit()),
+          BlocProvider<DeviceControlCubit>(
+            create: (context) => DeviceControlCubit(),
+          ),
+          BlocProvider<RealtimeCubit>(
+            create: (context) => RealtimeCubit(
+              authService: context.read<AuthService>(),
+              socketService: RealtimeSocketService(),
+              onUpdateStatus: context
+                  .read<DeviceControlCubit>()
+                  .applyUpdateStatus,
+            ),
+          ),
         ],
         child: BlocBuilder<NetworkCubit, NetworkState>(
           builder: (context, networkState) {
-            return BlocBuilder<MqttCubit, MqttState>(
-              builder: (context, mqttState) {
-                final isOffline =
-                    networkState.status != NetworkStatus.online ||
-                    mqttState.status != MqttStatus.connected;
-                return Disabled(
-                  isDisabled: isOffline,
-                  child: MaterialApp(
-                    title: 'SmartRecu',
-                    debugShowCheckedModeBanner: false,
-                    theme: AppTheme.light(),
-                    builder: (context, child) {
-                      return ToastificationWrapper(
-                        child: MultiBlocListener(
-                          listeners: [
-                            BlocListener<NetworkCubit, NetworkState>(
-                              listenWhen: (previous, current) {
-                                if (previous.status == current.status) {
-                                  return false;
-                                }
-                                if (previous.status == NetworkStatus.initial &&
-                                    current.status == NetworkStatus.online) {
-                                  return false;
-                                }
-                                return true;
-                              },
-                              listener: (context, state) {
-                                if (state.status == NetworkStatus.offline) {
-                                  context.read<MqttCubit>().disconnect();
-                                  AppToast.warning(
-                                    context,
-                                    'Немає підключення до інтернету',
-                                  );
-                                } else if (state.status ==
-                                    NetworkStatus.online) {
-                                  if (context.read<AuthBloc>().state
-                                      is AuthSuccess) {
-                                    context.read<MqttCubit>().connect();
-                                  }
-                                  AppToast.success(
-                                    context,
-                                    'Підключення відновлено',
-                                  );
-                                }
-                              },
-                            ),
-                            BlocListener<AuthBloc, AuthState>(
-                              listenWhen: (previous, current) {
-                                if (previous is AuthInitial &&
-                                    current is AuthSuccess) {
-                                  return true;
-                                }
-                                if (previous is AuthInProgress &&
-                                    current is AuthSuccess) {
-                                  return true;
-                                }
-                                if (previous is AuthSuccess &&
-                                    current is AuthUnauthenticated) {
-                                  return true;
-                                }
-                                return false;
-                              },
-                              listener: (context, state) {
-                                if (state is AuthSuccess) {
-                                  final isOnline =
-                                      context
-                                          .read<NetworkCubit>()
-                                          .state
-                                          .status ==
-                                      NetworkStatus.online;
-                                  if (isOnline) {
-                                    context.read<MqttCubit>().connect();
-                                  }
-                                } else if (state is AuthUnauthenticated) {
-                                  context.read<MqttCubit>().disconnect();
-                                }
-                              },
-                            ),
-                            BlocListener<MqttCubit, MqttState>(
-                              listenWhen: (previous, current) =>
-                                  previous.status != current.status,
-                              listener: (context, state) {
-                                final isNetworkOnline =
-                                    context.read<NetworkCubit>().state.status ==
-                                    NetworkStatus.online;
-                                if (isNetworkOnline &&
-                                    state.status == MqttStatus.disconnected) {
-                                  AppToast.warning(
-                                    context,
-                                    'Втрачено зв\'язок з MQTT',
-                                  );
-                                }
-                              },
-                            ),
-                          ],
-                          child: child!,
+            final isOffline = networkState.status != NetworkStatus.online;
+            return Disabled(
+              isDisabled: isOffline,
+              child: MaterialApp(
+                title: 'SmartRecu',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.light(),
+                builder: (context, child) {
+                  return ToastificationWrapper(
+                    child: MultiBlocListener(
+                      listeners: [
+                        BlocListener<NetworkCubit, NetworkState>(
+                          listenWhen: (previous, current) {
+                            if (previous.status == current.status) {
+                              return false;
+                            }
+                            if (previous.status == NetworkStatus.initial &&
+                                current.status == NetworkStatus.online) {
+                              return false;
+                            }
+                            return true;
+                          },
+                          listener: (context, state) {
+                            if (state.status == NetworkStatus.offline) {
+                              context.read<RealtimeCubit>().disconnect();
+                              AppToast.warning(
+                                context,
+                                'Немає підключення до інтернету',
+                              );
+                            } else if (state.status == NetworkStatus.online) {
+                              if (context.read<AuthBloc>().state
+                                  is AuthSuccess) {
+                                context.read<RealtimeCubit>().connect();
+                              }
+                              AppToast.success(
+                                context,
+                                'Підключення відновлено',
+                              );
+                            }
+                          },
                         ),
-                      );
-                    },
-                    home: const InitialScreen(),
-                  ),
-                );
-              },
+                        BlocListener<AuthBloc, AuthState>(
+                          listenWhen: (previous, current) {
+                            if (previous is AuthInitial &&
+                                current is AuthSuccess) {
+                              return true;
+                            }
+                            if (previous is AuthInProgress &&
+                                current is AuthSuccess) {
+                              return true;
+                            }
+                            if (previous is AuthSuccess &&
+                                current is AuthUnauthenticated) {
+                              return true;
+                            }
+                            return false;
+                          },
+                          listener: (context, state) {
+                            if (state is AuthSuccess) {
+                              final isOnline =
+                                  context.read<NetworkCubit>().state.status ==
+                                  NetworkStatus.online;
+                              if (isOnline) {
+                                context.read<RealtimeCubit>().connect();
+                              }
+                            } else if (state is AuthUnauthenticated) {
+                              context.read<RealtimeCubit>().disconnect();
+                              context.read<DeviceControlCubit>().reset();
+                            }
+                          },
+                        ),
+                      ],
+                      child: child!,
+                    ),
+                  );
+                },
+                home: const InitialScreen(),
+              ),
             );
           },
         ),
