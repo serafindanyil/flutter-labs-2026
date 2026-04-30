@@ -5,6 +5,15 @@ export interface SensorUpdate {
   tempOut: number;
 }
 
+export interface RealtimeSensorUpdate {
+  co2: number;
+  humidity: number;
+  innerTemp: number;
+  outerTemp: number;
+  fanInSpd: number | null;
+  fanOutSpd: number | null;
+}
+
 export interface SensorCacheSnapshot {
   humidity: number | null;
   co2: number | null;

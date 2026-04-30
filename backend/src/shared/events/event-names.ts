@@ -6,5 +6,4 @@ export const EVENT_NAMES = {
   DEVICE_FAN_OUT_SPEED_CHANGED: "device.fan-out-speed.changed",
   DEVICE_STATUS_CHANGED: "device.status.changed",
   FRONTEND_BROADCAST: "frontend.broadcast",
-  SENSOR_HISTORY_REFRESHED: "sensor.history.refreshed",
 } as const;
