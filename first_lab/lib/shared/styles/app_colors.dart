@@ -31,6 +31,8 @@ abstract final class AppColors {
   static const Color surface = white;
   static const Color surfaceAccent = blue100;
   static const Color border = gray100;
+  static const Color disabledAccent = gray500;
+  static const Color disabled = gray400;
   static const Color success = green;
   static const Color warning = yellow;
   static const Color danger = red;
