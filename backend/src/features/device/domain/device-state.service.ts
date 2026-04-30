@@ -1,6 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { DEVICE_STATUS } from "../../../shared/constants/realtime.constants";
-import type { DeviceMode, DeviceSetupPayload, DeviceStatus } from "../../../shared/types/realtime.types";
+import { DEVICE_MODE, DEVICE_POWER_STATE, DEVICE_STATUS } from "../../../shared/constants/realtime.constants";
+import type {
+  DeviceClientStatePayload,
+  DeviceMode,
+  DevicePowerState,
+  DeviceSetupPayload,
+  DeviceStatus,
+} from "../../../shared/types/realtime.types";
 import type { DeviceStateReader } from "./device-ports";
 import type { DeviceInitPayload } from "./device-message.types";
 
@@ -11,6 +17,7 @@ export class DeviceStateService implements DeviceStateReader {
   private mode: DeviceMode | null = null;
   private fanInSpd: number | null = null;
   private fanOutSpd: number | null = null;
+  private turboEndsAt: Date | null = null;
 
   getStatus(): DeviceStatus {
     return this.status;
@@ -35,6 +42,9 @@ export class DeviceStateService implements DeviceStateReader {
 
   setMode(value: DeviceMode): void {
     this.mode = value;
+    if (value !== DEVICE_MODE.TURBO) {
+      this.turboEndsAt = null;
+    }
   }
 
   setFanInSpeed(value: number): void {
@@ -45,6 +55,10 @@ export class DeviceStateService implements DeviceStateReader {
     this.fanOutSpd = value;
   }
 
+  setTurboEndsAt(value: Date | null): void {
+    this.turboEndsAt = value;
+  }
+
   getSetupPayload(): DeviceSetupPayload {
     return {
       switchState: this.switchState,
@@ -52,5 +66,21 @@ export class DeviceStateService implements DeviceStateReader {
       fanInSpd: this.fanInSpd,
       fanOutSpd: this.fanOutSpd,
     };
+  }
+
+  getClientStatePayload(): DeviceClientStatePayload {
+    return {
+      deviceStatus: this.status,
+      state: this.toPowerState(this.switchState),
+      mode: this.mode,
+      fanInSpd: this.fanInSpd,
+      fanOutSpd: this.fanOutSpd,
+      turboEndsAt: this.turboEndsAt?.toISOString() ?? null,
+    };
+  }
+
+  private toPowerState(value: boolean | null): DevicePowerState | null {
+    if (value === null) return null;
+    return value ? DEVICE_POWER_STATE.ON : DEVICE_POWER_STATE.OFF;
   }
 }
