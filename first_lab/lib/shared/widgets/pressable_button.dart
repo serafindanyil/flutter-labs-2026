@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class PressableButton extends StatefulWidget {
   final Widget child;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const PressableButton({required this.child, required this.onTap, super.key});
 
@@ -13,10 +13,22 @@ class PressableButton extends StatefulWidget {
 class _PressableButtonState extends State<PressableButton> {
   bool _isPressed = false;
 
-  void _handleTapDown(TapDownDetails details) =>
-      setState(() => _isPressed = true);
-  void _handleTapUp(TapUpDetails details) => setState(() => _isPressed = false);
-  void _handleTapCancel() => setState(() => _isPressed = false);
+  bool get _isDisabled => widget.onTap == null;
+
+  void _handleTapDown(TapDownDetails details) {
+    if (_isDisabled) return;
+    setState(() => _isPressed = true);
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (_isDisabled) return;
+    setState(() => _isPressed = false);
+  }
+
+  void _handleTapCancel() {
+    if (_isDisabled) return;
+    setState(() => _isPressed = false);
+  }
 
   @override
   Widget build(BuildContext context) {
