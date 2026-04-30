@@ -1,19 +1,14 @@
+import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/pressable_button.dart';
 import 'package:first_lab/shared/widgets/primary_container.dart';
 import 'package:flutter/material.dart';
 
-enum DeviceMode { manual, auto, turbo }
-
 class ModeWidget extends StatelessWidget {
-  final DeviceMode mode;
-  final ValueChanged<DeviceMode> onModeChanged;
+  final DeviceMode? mode;
+  final bool isDisabled;
 
-  const ModeWidget({
-    required this.mode,
-    required this.onModeChanged,
-    super.key,
-  });
+  const ModeWidget({required this.mode, required this.isDisabled, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,31 +33,34 @@ class ModeWidget extends StatelessWidget {
             height: 56,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.blue400,
+              color: isDisabled ? AppColors.disabledAccent : AppColors.blue400,
               borderRadius: BorderRadius.circular(30),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final double width = constraints.maxWidth;
                 final double itemWidth = width / 3;
-                final int selectedIndex = DeviceMode.values.indexOf(mode);
+                final selectedIndex = mode == null
+                    ? -1
+                    : DeviceMode.values.indexOf(mode!);
 
                 return Stack(
                   children: [
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      left: selectedIndex * itemWidth,
-                      top: 0,
-                      bottom: 0,
-                      width: itemWidth,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(26),
+                    if (selectedIndex >= 0)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        left: selectedIndex * itemWidth,
+                        top: 0,
+                        bottom: 0,
+                        width: itemWidth,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(26),
+                          ),
                         ),
                       ),
-                    ),
                     Row(
                       children: [
                         _buildModeButton(DeviceMode.manual, 'Ручний', context),
@@ -88,7 +86,7 @@ class ModeWidget extends StatelessWidget {
     final isSelected = mode == targetMode;
     return Expanded(
       child: PressableButton(
-        onTap: () => onModeChanged(targetMode),
+        onTap: null,
         child: ColoredBox(
           color: Colors.transparent,
           child: Center(
@@ -96,7 +94,7 @@ class ModeWidget extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: isSelected ? AppColors.primaryText : AppColors.white,
+                color: _getButtonTextColor(isSelected),
               ),
               child: Text(title),
             ),
@@ -106,7 +104,16 @@ class ModeWidget extends StatelessWidget {
     );
   }
 
-  String _getModeName(DeviceMode mode) {
+  Color _getButtonTextColor(bool isSelected) {
+    if (isDisabled) {
+      return isSelected ? AppColors.disabledAccent : AppColors.white;
+    }
+    return isSelected ? AppColors.primaryText : AppColors.white;
+  }
+
+  String _getModeName(DeviceMode? mode) {
+    if (mode == null) return 'Невідомо';
+
     switch (mode) {
       case DeviceMode.manual:
         return 'Ручний';

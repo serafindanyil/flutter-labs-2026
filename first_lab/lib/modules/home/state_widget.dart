@@ -1,3 +1,4 @@
+import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/pressable_button.dart';
 import 'package:first_lab/shared/widgets/primary_container.dart';
@@ -5,13 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class StateWidget extends StatelessWidget {
-  final bool isOn;
-  final ValueChanged<bool> onToggle;
+  final DevicePowerState? state;
+  final bool isDisabled;
 
-  const StateWidget({required this.isOn, required this.onToggle, super.key});
+  const StateWidget({required this.state, required this.isDisabled, super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isOn = state == DevicePowerState.on;
+    final buttonColor = isDisabled
+        ? AppColors.disabledAccent
+        : isOn
+        ? AppColors.blue500
+        : AppColors.blue200;
+    final iconColor = isDisabled || isOn ? AppColors.white : AppColors.blue500;
+
     return PrimaryContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -21,7 +30,7 @@ class StateWidget extends StatelessWidget {
             children: [
               Text('Стан', style: Theme.of(context).textTheme.displayMedium),
               Text(
-                isOn ? 'Увімк.' : 'Вимк.',
+                _getStateName(state),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
@@ -32,26 +41,33 @@ class StateWidget extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: PressableButton(
-              onTap: () => onToggle(!isOn),
+              onTap: null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: isOn ? AppColors.blue500 : AppColors.blue200,
+                  color: buttonColor,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  LucideIcons.power,
-                  size: 32,
-                  color: isOn ? AppColors.white : AppColors.blue500,
-                ),
+                child: Icon(LucideIcons.power, size: 32, color: iconColor),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _getStateName(DevicePowerState? state) {
+    switch (state) {
+      case DevicePowerState.on:
+        return 'Увімк.';
+      case DevicePowerState.off:
+        return 'Вимк.';
+      case null:
+        return 'Невідомо';
+    }
   }
 }
