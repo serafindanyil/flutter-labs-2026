@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { DEVICE_SWITCH_STATE_COMMAND_STALE_MS } from "../../../shared/constants/app.constants";
 import { DEVICE_MODE, DEVICE_POWER_STATE, DEVICE_STATUS } from "../../../shared/constants/realtime.constants";
 import type {
   DeviceClientStatePayload,
@@ -21,6 +22,7 @@ export class DeviceStateService implements DeviceStateReader {
   private fanInRpm: number | null = null;
   private fanOutRpm: number | null = null;
   private turboEndsAt: Date | null = null;
+  private pendingSwitchStateCommand: { value: boolean; expiresAt: number } | null = null;
 
   getStatus(): DeviceStatus {
     return this.status;
@@ -33,14 +35,36 @@ export class DeviceStateService implements DeviceStateReader {
   }
 
   applyInit(payload: DeviceInitPayload): void {
+    this.pendingSwitchStateCommand = null;
     this.switchState = payload.switchState;
     this.mode = payload.mode;
     this.fanInSpd = payload.fanInSpd;
     this.fanOutSpd = payload.fanOutSpd;
   }
 
-  setSwitchState(value: boolean): void {
+  setSwitchStateFromCommand(value: boolean): void {
     this.switchState = value;
+    this.pendingSwitchStateCommand = {
+      value,
+      expiresAt: Date.now() + DEVICE_SWITCH_STATE_COMMAND_STALE_MS,
+    };
+  }
+
+  setSwitchStateFromDevice(value: boolean): boolean {
+    const pending = this.pendingSwitchStateCommand;
+
+    if (pending !== null) {
+      if (Date.now() > pending.expiresAt) {
+        this.pendingSwitchStateCommand = null;
+      } else if (value !== pending.value) {
+        return false;
+      } else {
+        this.pendingSwitchStateCommand = null;
+      }
+    }
+
+    this.switchState = value;
+    return true;
   }
 
   setMode(value: DeviceMode): void {

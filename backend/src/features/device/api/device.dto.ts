@@ -58,3 +58,8 @@ export class ChangeModeDto {
   })
   turboDurationSec?: number;
 }
+
+export class ChangeModeResponseDto {
+  @ApiProperty({ type: String, example: "2026-04-30T12:15:00.000Z", nullable: true })
+  turboEndsAt!: string | null;
+}

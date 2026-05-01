@@ -14,6 +14,10 @@ import type { DeviceClientStatePayload, DeviceMode, DevicePowerState } from "../
 import type { DeviceActivityReader, DeviceCommandSender } from "./device-ports";
 import { DeviceStateService } from "./device-state.service";
 
+export interface ChangeModeResult {
+  turboEndsAt: string | null;
+}
+
 @Injectable()
 export class DeviceControlService implements OnModuleDestroy {
   private turboTimer: NodeJS.Timeout | null = null;
@@ -36,12 +40,12 @@ export class DeviceControlService implements OnModuleDestroy {
   async changePowerState(value: DevicePowerState): Promise<void> {
     await this.ensureEsp32Online();
     const enabled = this.toSwitchState(value);
-    this.state.setSwitchState(enabled);
+    this.state.setSwitchStateFromCommand(enabled);
     this.commandSender.sendSwitchState(enabled);
     this.broadcastUpdateStatus();
   }
 
-  async changeMode(mode: DeviceMode, turboDurationSec: number | undefined): Promise<void> {
+  async changeMode(mode: DeviceMode, turboDurationSec: number | undefined): Promise<ChangeModeResult> {
     await this.ensureEsp32Online();
 
     if (mode !== DEVICE_MODE.TURBO) {
@@ -50,7 +54,7 @@ export class DeviceControlService implements OnModuleDestroy {
       this.state.setMode(mode);
       this.commandSender.sendMode(mode);
       this.broadcastUpdateStatus();
-      return;
+      return { turboEndsAt: null };
     }
 
     const duration = this.normalizeTurboDuration(turboDurationSec);
@@ -63,12 +67,14 @@ export class DeviceControlService implements OnModuleDestroy {
     this.broadcastUpdateStatus();
 
     this.turboTimer = setTimeout(() => {
-      this.state.setMode(DEVICE_MODE.MANUAL);
+      this.state.setMode(DEVICE_MODE.AUTO);
       this.state.setTurboEndsAt(null);
-      this.commandSender.sendMode(DEVICE_MODE.MANUAL);
+      this.commandSender.sendMode(DEVICE_MODE.AUTO);
       this.broadcastUpdateStatus();
       this.turboTimer = null;
     }, duration * SECONDS_IN_MS);
+
+    return { turboEndsAt: turboEndsAt.toISOString() };
   }
 
   private normalizeTurboDuration(value: number | undefined): number {

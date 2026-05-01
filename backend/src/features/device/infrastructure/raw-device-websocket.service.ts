@@ -151,7 +151,7 @@ export class RawDeviceWebSocketService implements OnModuleInit, OnModuleDestroy 
     const payload = parseBooleanPayload(data);
     if (payload === null) return;
     this.registry.touchEsp32(client);
-    this.state.setSwitchState(payload);
+    if (!this.state.setSwitchStateFromDevice(payload)) return;
     this.checkAndBroadcastStatus();
     this.broadcastUpdateStatus();
   }

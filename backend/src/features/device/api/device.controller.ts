@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiBody, ApiConflictResponse, ApiOkResponse, ApiTags } f
 import { DEVICE_MODE, DEVICE_POWER_STATE } from "../../../shared/constants/realtime.constants";
 import { FirebaseAuthGuard } from "../../auth/firebase-auth.guard";
 import { DeviceControlService } from "../domain/device-control.service";
-import { ChangeModeDto, ChangePowerStateDto, DeviceStateDto } from "./device.dto";
+import { ChangeModeDto, ChangeModeResponseDto, ChangePowerStateDto, DeviceStateDto } from "./device.dto";
 
 @ApiTags("device")
 @Controller("device")
@@ -36,13 +36,13 @@ export class DeviceController {
   @Post("mode")
   @HttpCode(HttpStatus.OK)
   @ApiBody({ type: ChangeModeDto })
-  @ApiOkResponse({ description: "Command accepted" })
+  @ApiOkResponse({ type: ChangeModeResponseDto })
   @ApiConflictResponse({ description: "ESP32 is offline" })
-  async changeMode(@Body() body: ChangeModeDto): Promise<void> {
+  async changeMode(@Body() body: ChangeModeDto): Promise<ChangeModeResponseDto> {
     if (body?.mode !== DEVICE_MODE.MANUAL && body?.mode !== DEVICE_MODE.AUTO && body?.mode !== DEVICE_MODE.TURBO) {
       throw new BadRequestException("mode must be manual, auto, or turbo");
     }
 
-    await this.deviceControl.changeMode(body.mode, body.turboDurationSec);
+    return this.deviceControl.changeMode(body.mode, body.turboDurationSec);
   }
 }
