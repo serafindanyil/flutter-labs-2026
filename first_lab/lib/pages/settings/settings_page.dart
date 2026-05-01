@@ -3,6 +3,8 @@ import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
+import 'package:first_lab/shared/network/bloc/network_cubit.dart';
+import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/logout_dialog.dart';
@@ -109,6 +111,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hasNetworkAccess =
+        context.watch<NetworkCubit>().state.status == NetworkStatus.online;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -130,25 +135,9 @@ class _SettingsPageState extends State<SettingsPage> {
               label: 'Ім\'я',
               hasStaticChildHeight: true,
               trailing: !_isEditing
-                  ? GestureDetector(
-                      onTap: () {
-                        setState(() => _isEditing = true);
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _nameFocusNode.requestFocus();
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.blue100,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          LucideIcons.pencil,
-                          color: AppColors.blue500,
-                          size: 24,
-                        ),
-                      ),
+                  ? _EditProfileButton(
+                      isEnabled: hasNetworkAccess,
+                      onTap: () => _startEditing(hasNetworkAccess),
                     )
                   : null,
               child: _isEditing
@@ -181,6 +170,41 @@ class _SettingsPageState extends State<SettingsPage> {
               icon: LucideIcons.logOut,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _startEditing(bool hasNetworkAccess) {
+    if (!hasNetworkAccess) return;
+
+    setState(() => _isEditing = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocusNode.requestFocus();
+    });
+  }
+}
+
+class _EditProfileButton extends StatelessWidget {
+  final bool isEnabled;
+  final VoidCallback onTap;
+
+  const _EditProfileButton({required this.isEnabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isEnabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isEnabled ? AppColors.blue100 : AppColors.gray100,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          LucideIcons.pencil,
+          color: isEnabled ? AppColors.blue500 : AppColors.gray500,
+          size: 24,
         ),
       ),
     );

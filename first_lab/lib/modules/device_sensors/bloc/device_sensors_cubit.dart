@@ -7,8 +7,8 @@ class DeviceSensorsCubit extends Cubit<DeviceSensorsState> {
   void applySensors(Map<String, Object?> payload) {
     emit(
       DeviceSensorsState(
-        co2: _parseNumber(payload['co2']),
-        humidity: _parseNumber(payload['humidity']),
+        co2: _parseSensorNumber(payload['co2']),
+        humidity: _parseSensorNumber(payload['humidity']),
         innerTemp: _parseTemperature(payload['innerTemp']),
         outerTemp: _parseTemperature(payload['outerTemp']),
         fanInSpd: _parseNumber(payload['fanInSpd']),
@@ -26,10 +26,18 @@ class DeviceSensorsCubit extends Cubit<DeviceSensorsState> {
     return null;
   }
 
+  num? _parseSensorNumber(Object? value) {
+    final number = _parseNumber(value);
+    if (number == null) return null;
+    if (number == DeviceSensorsState.invalidZeroValue) return null;
+    return number;
+  }
+
   num? _parseTemperature(Object? value) {
     final temperature = _parseNumber(value);
     if (temperature == null) return null;
     if (temperature == DeviceSensorsState.invalidTemperatureValue) return null;
+    if (temperature == DeviceSensorsState.invalidZeroValue) return null;
     return temperature;
   }
 }

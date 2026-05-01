@@ -1,3 +1,4 @@
+import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/modules/device_sensors/device_sensors_module.dart';
 import 'package:first_lab/modules/statistics/statistics_module.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
@@ -13,74 +14,81 @@ class StatisticsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<NetworkCubit, NetworkState>(
       builder: (context, networkState) {
-        final isDisabled = networkState.status != NetworkStatus.online;
+        return BlocBuilder<DeviceControlCubit, DeviceControlState>(
+          builder: (context, deviceControlState) {
+            final isDisabled = DeviceControlAvailability.isDisabled(
+              networkStatus: networkState.status,
+              deviceControl: deviceControlState,
+            );
 
-        return BlocBuilder<DeviceSensorsCubit, DeviceSensorsState>(
-          builder: (context, sensorsState) {
-            final co2Status = _co2Status(sensorsState.co2);
+            return BlocBuilder<DeviceSensorsCubit, DeviceSensorsState>(
+              builder: (context, sensorsState) {
+                final co2Status = _co2Status(sensorsState.co2);
 
-            return ListView(
-              padding: const EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 16,
-                bottom: 120,
-              ),
-              children: [
-                Text(
-                  'Показники',
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-                const SizedBox(height: 24),
-                IndicatorCard(
-                  title: 'Рівень CO₂',
-                  value: _formatNumber(sensorsState.co2),
-                  unit: 'ppm',
-                  status: co2Status.text,
-                  statusColor: co2Status.color,
-                  isDisabled: isDisabled,
-                ),
-                const SizedBox(height: 16),
-                IndicatorCard(
-                  title: 'Вологість',
-                  value: _formatNumber(sensorsState.humidity),
-                  unit: '%',
-                  isDisabled: isDisabled,
-                ),
-                const SizedBox(height: 16),
-                IndicatorCard(
-                  title: 'Внутр. вентилятор',
-                  value: _formatNumber(sensorsState.fanInSpd),
-                  unit: '%',
-                  isDisabled: isDisabled,
-                ),
-                const SizedBox(height: 16),
-                IndicatorCard(
-                  title: 'Зовн. вентилятор',
-                  value: _formatNumber(sensorsState.fanOutSpd),
-                  unit: '%',
-                  isDisabled: isDisabled,
-                ),
-                const SizedBox(height: 16),
-                IndicatorCard(
-                  title: 'ККД рекуператора',
-                  value: _formatNumber(sensorsState.efficiencyPercent),
-                  unit: '%',
-                  isDisabled: isDisabled,
-                ),
-                const SizedBox(height: 16),
-                DualIndicatorCard(
-                  title1: 'Темп',
-                  suffix1: 'Вхідна',
-                  value1: _formatNumber(sensorsState.innerTemp),
-                  unit1: '°C',
-                  title2: 'Темп',
-                  suffix2: 'Вихідна',
-                  value2: _formatNumber(sensorsState.outerTemp),
-                  unit2: '°C',
-                  isDisabled: isDisabled,
-                ),
-              ],
+                return ListView(
+                  padding: const EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    top: 16,
+                    bottom: 120,
+                  ),
+                  children: [
+                    Text(
+                      'Показники',
+                      style: Theme.of(context).textTheme.displayLarge,
+                    ),
+                    const SizedBox(height: 24),
+                    IndicatorCard(
+                      title: 'Рівень CO₂',
+                      value: _formatNumber(sensorsState.co2),
+                      unit: 'ppm',
+                      status: co2Status.text,
+                      statusColor: co2Status.color,
+                      isDisabled: isDisabled,
+                    ),
+                    const SizedBox(height: 16),
+                    IndicatorCard(
+                      title: 'Вологість',
+                      value: _formatNumber(sensorsState.humidity),
+                      unit: '%',
+                      isDisabled: isDisabled,
+                    ),
+                    const SizedBox(height: 16),
+                    IndicatorCard(
+                      title: 'Внутр. вентилятор',
+                      value: _formatNumber(sensorsState.fanInSpd),
+                      unit: '%',
+                      isDisabled: isDisabled,
+                    ),
+                    const SizedBox(height: 16),
+                    IndicatorCard(
+                      title: 'Зовн. вентилятор',
+                      value: _formatNumber(sensorsState.fanOutSpd),
+                      unit: '%',
+                      isDisabled: isDisabled,
+                    ),
+                    const SizedBox(height: 16),
+                    IndicatorCard(
+                      title: 'ККД рекуператора',
+                      value: _formatNumber(sensorsState.efficiencyPercent),
+                      unit: '%',
+                      isDisabled: isDisabled,
+                    ),
+                    const SizedBox(height: 16),
+                    DualIndicatorCard(
+                      title1: 'Темп',
+                      suffix1: 'Вхідна',
+                      value1: _formatNumber(sensorsState.innerTemp),
+                      unit1: '°C',
+                      title2: 'Темп',
+                      suffix2: 'Вихідна',
+                      value2: _formatNumber(sensorsState.outerTemp),
+                      unit2: '°C',
+                      isDisabled: isDisabled,
+                    ),
+                  ],
+                );
+              },
             );
           },
         );
