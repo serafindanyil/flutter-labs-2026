@@ -1,4 +1,5 @@
 import 'package:first_lab/modules/device_control/device_control_module.dart';
+import 'package:first_lab/modules/device_sensors/device_sensors_module.dart';
 import 'package:first_lab/modules/home/mode_widget.dart';
 import 'package:first_lab/modules/home/state_widget.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
@@ -89,6 +90,57 @@ void main() {
       ),
       isTrue,
     );
+  });
+
+  test('applies sensors payload and filters invalid temperatures', () {
+    final cubit = DeviceSensorsCubit();
+
+    cubit.applySensors({
+      'co2': 1192,
+      'humidity': 37,
+      'innerTemp': 23.1,
+      'outerTemp': -127,
+      'fanInSpd': 75,
+      'fanOutSpd': 75,
+    });
+
+    expect(cubit.state.co2, 1192);
+    expect(cubit.state.humidity, 37);
+    expect(cubit.state.innerTemp, 23.1);
+    expect(cubit.state.outerTemp, isNull);
+    expect(cubit.state.fanInSpd, 75);
+    expect(cubit.state.fanOutSpd, 75);
+    expect(cubit.state.efficiencyPercent, isNull);
+
+    cubit.close();
+  });
+
+  test('filters invalid zero sensor bootstrap payload', () {
+    final cubit = DeviceSensorsCubit();
+
+    cubit.applySensors({
+      'co2': 0,
+      'humidity': 0,
+      'innerTemp': 0,
+      'outerTemp': 21,
+      'fanInSpd': 75,
+      'fanOutSpd': 75,
+    });
+
+    expect(cubit.state.co2, isNull);
+    expect(cubit.state.humidity, isNull);
+    expect(cubit.state.innerTemp, isNull);
+    expect(cubit.state.outerTemp, 21);
+    expect(cubit.state.fanInSpd, 75);
+    expect(cubit.state.fanOutSpd, 75);
+
+    cubit.close();
+  });
+
+  test('calculates recuperator efficiency from valid temperatures', () {
+    const state = DeviceSensorsState(innerTemp: 20, outerTemp: 10);
+
+    expect(state.efficiencyPercent, 50);
   });
 
   testWidgets('mode widget renders socket mode as read-only', (tester) async {

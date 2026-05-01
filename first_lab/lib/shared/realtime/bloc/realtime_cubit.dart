@@ -26,6 +26,11 @@ class RealtimeCubit extends Cubit<RealtimeState> {
     Duration(seconds: 16),
     Duration(seconds: 30),
   ];
+  static const Set<String> _authErrorCodes = {
+    'auth/missing-bearer',
+    'auth/id-token-expired',
+    'auth/id-token-invalid',
+  };
 
   final AuthService _authService;
   final RealtimeSocketService _socketService;
@@ -34,6 +39,7 @@ class RealtimeCubit extends Cubit<RealtimeState> {
 
   Timer? _retryTimer;
   bool _shouldStayConnected = false;
+  bool _lastConnectForcedRefresh = false;
   int _retryAttempt = 0;
 
   Future<void> connect() async {
@@ -64,6 +70,7 @@ class RealtimeCubit extends Cubit<RealtimeState> {
 
   Future<void> _connect({required bool forceRefresh}) async {
     if (!_shouldStayConnected || isClosed) return;
+    _lastConnectForcedRefresh = forceRefresh;
 
     emit(
       state.copyWith(
@@ -110,7 +117,30 @@ class RealtimeCubit extends Cubit<RealtimeState> {
   void _handleError(Object? error) {
     if (!_shouldStayConnected || isClosed) return;
     _socketService.disconnect();
+
+    if (_isAuthError(error) && !_lastConnectForcedRefresh) {
+      _retryNowWithFreshToken();
+      return;
+    }
+
     _scheduleRetry(forceRefresh: true);
+  }
+
+  void _retryNowWithFreshToken() {
+    if (!_shouldStayConnected || isClosed) return;
+
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _retryAttempt += 1;
+
+    emit(
+      state.copyWith(
+        status: RealtimeStatus.reconnecting,
+        retryAttempt: _retryAttempt,
+      ),
+    );
+
+    unawaited(_connect(forceRefresh: true));
   }
 
   void _scheduleRetry({required bool forceRefresh}) {
@@ -137,6 +167,36 @@ class RealtimeCubit extends Cubit<RealtimeState> {
     final index = attempt - 1;
     if (index < _retryDelays.length) return _retryDelays[index];
     return _retryDelays.last;
+  }
+
+  bool _isAuthError(Object? error) {
+    final code = _extractAuthErrorCode(error);
+    return code != null && _authErrorCodes.contains(code);
+  }
+
+  String? _extractAuthErrorCode(Object? error) {
+    final payload = _parsePayload(error);
+    final code = payload?['code'];
+    if (code is String) return code;
+
+    final data = payload?['data'];
+    final dataPayload = _parsePayload(data);
+    final dataCode = dataPayload?['code'];
+    if (dataCode is String) return dataCode;
+
+    return null;
+  }
+
+  Map<String, Object?>? _parsePayload(Object? data) {
+    if (data is Map<String, Object?>) return data;
+    if (data is Map<Object?, Object?>) {
+      final payload = <String, Object?>{};
+      for (final entry in data.entries) {
+        payload[entry.key.toString()] = entry.value;
+      }
+      return payload;
+    }
+    return null;
   }
 
   @override

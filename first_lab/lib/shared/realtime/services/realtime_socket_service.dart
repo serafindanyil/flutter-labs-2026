@@ -25,6 +25,7 @@ class RealtimeSocketService {
       url,
       io.OptionBuilder()
           .setTransports(['websocket'])
+          .enableForceNew()
           .disableAutoConnect()
           .disableReconnection()
           .setAuth({'token': token})
@@ -63,7 +64,7 @@ class RealtimeSocketService {
 
   Map<String, Object?>? _parsePayload(Object? data) {
     if (data is Map<String, Object?>) return data;
-    if (data is Map) {
+    if (data is Map<Object?, Object?>) {
       final payload = <String, Object?>{};
       for (final entry in data.entries) {
         payload[entry.key.toString()] = entry.value;
