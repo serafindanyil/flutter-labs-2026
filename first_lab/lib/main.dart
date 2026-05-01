@@ -48,6 +48,11 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               const SecureStorageService(secureStorage: FlutterSecureStorage()),
         ),
+        RepositoryProvider<DeviceControlCommandService>(
+          create: (context) => DeviceControlCommandService(
+            authService: context.read<AuthService>(),
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [

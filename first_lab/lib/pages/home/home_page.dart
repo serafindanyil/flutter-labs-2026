@@ -2,6 +2,7 @@ import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/modules/home/home_module.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
+import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -36,11 +37,13 @@ class HomePage extends StatelessWidget {
                 ModeWidget(
                   mode: deviceControlState.mode,
                   isDisabled: isControlsDisabled,
+                  onModeChanged: (mode) => _changeMode(context, mode),
                 ),
                 const SizedBox(height: 16),
                 StateWidget(
                   state: deviceControlState.state,
                   isDisabled: isControlsDisabled,
+                  onStateChanged: (state) => _changeState(context, state),
                 ),
                 const SizedBox(height: 32),
                 Text(
@@ -63,5 +66,44 @@ class HomePage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _changeMode(BuildContext context, DeviceMode mode) async {
+    try {
+      await context.read<DeviceControlCommandService>().changeMode(mode);
+    } on DeviceControlCommandException catch (error) {
+      if (!context.mounted) return;
+      _showCommandError(context, error.error);
+    }
+  }
+
+  Future<void> _changeState(
+    BuildContext context,
+    DevicePowerState state,
+  ) async {
+    try {
+      await context.read<DeviceControlCommandService>().changePowerState(state);
+    } on DeviceControlCommandException catch (error) {
+      if (!context.mounted) return;
+      _showCommandError(context, error.error);
+    }
+  }
+
+  void _showCommandError(
+    BuildContext context,
+    DeviceControlCommandError error,
+  ) {
+    switch (error) {
+      case DeviceControlCommandError.deviceOffline:
+        AppToast.error(context, 'Пристрій є offline');
+        return;
+      case DeviceControlCommandError.serverError:
+        AppToast.error(context, 'Помилка на сервері');
+        return;
+      case DeviceControlCommandError.unauthorized:
+      case DeviceControlCommandError.unknown:
+        AppToast.error(context, 'Не вдалося виконати команду');
+        return;
+    }
   }
 }
