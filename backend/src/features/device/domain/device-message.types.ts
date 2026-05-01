@@ -1,5 +1,5 @@
 import type { SensorUpdate } from "../../sensors/domain/sensor.types";
-import type { DeviceKind, DeviceMode } from "../../../shared/types/realtime.types";
+import type { DeviceFanSpeedRpmPayload, DeviceKind, DeviceMode } from "../../../shared/types/realtime.types";
 
 export interface DeviceClientEnvelope {
   device: DeviceKind;
@@ -15,3 +15,4 @@ export interface DeviceInitPayload {
 }
 
 export type DeviceSensorUpdate = SensorUpdate;
+export type DeviceFanSpeedRpmUpdate = DeviceFanSpeedRpmPayload;

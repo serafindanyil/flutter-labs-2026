@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DEVICE_MODE, DEVICE_POWER_STATE, DEVICE_STATUS } from "../../../shared/constants/realtime.constants";
 import type {
   DeviceClientStatePayload,
+  DeviceFanSpeedRpmPayload,
   DeviceMode,
   DevicePowerState,
   DeviceSetupPayload,
@@ -17,6 +18,8 @@ export class DeviceStateService implements DeviceStateReader {
   private mode: DeviceMode | null = null;
   private fanInSpd: number | null = null;
   private fanOutSpd: number | null = null;
+  private fanInRpm: number | null = null;
+  private fanOutRpm: number | null = null;
   private turboEndsAt: Date | null = null;
 
   getStatus(): DeviceStatus {
@@ -55,6 +58,11 @@ export class DeviceStateService implements DeviceStateReader {
     this.fanOutSpd = value;
   }
 
+  setFanSpeedRpm(value: DeviceFanSpeedRpmPayload): void {
+    this.fanInRpm = value.fanInSpd;
+    this.fanOutRpm = value.fanOutSpd;
+  }
+
   setTurboEndsAt(value: Date | null): void {
     this.turboEndsAt = value;
   }
@@ -65,6 +73,13 @@ export class DeviceStateService implements DeviceStateReader {
       mode: this.mode,
       fanInSpd: this.fanInSpd,
       fanOutSpd: this.fanOutSpd,
+    };
+  }
+
+  getFanSpeedRpmPayload(): DeviceFanSpeedRpmPayload {
+    return {
+      fanInSpd: this.fanInRpm,
+      fanOutSpd: this.fanOutRpm,
     };
   }
 

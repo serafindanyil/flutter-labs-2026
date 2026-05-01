@@ -1,4 +1,10 @@
-import type { DeviceClientStatePayload, DeviceMode, DeviceSetupPayload, DeviceStatus } from "../../../shared/types/realtime.types";
+import type {
+  DeviceClientStatePayload,
+  DeviceFanSpeedRpmPayload,
+  DeviceMode,
+  DeviceSetupPayload,
+  DeviceStatus,
+} from "../../../shared/types/realtime.types";
 
 export interface DeviceCommandSender {
   sendSwitchState(data: boolean): void;
@@ -13,6 +19,7 @@ export interface DeviceActivityReader {
 
 export interface DeviceStateReader {
   getSetupPayload(): DeviceSetupPayload;
+  getFanSpeedRpmPayload(): DeviceFanSpeedRpmPayload;
   getClientStatePayload(): DeviceClientStatePayload;
   getStatus(): DeviceStatus;
 }
@@ -20,4 +27,5 @@ export interface DeviceStateReader {
 export interface DeviceStateWriter {
   setFanInSpeed(value: number): void;
   setFanOutSpeed(value: number): void;
+  setFanSpeedRpm(value: DeviceFanSpeedRpmPayload): void;
 }

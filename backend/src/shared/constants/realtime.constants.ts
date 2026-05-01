@@ -18,6 +18,7 @@ export const DEVICE_MESSAGE_TYPE = {
   PING: "ping",
   INIT: "init",
   UPDATE: "update",
+  FAN_SPEED_RPM: "fanSpeedRpm",
   SWITCH_STATE: "switchState",
   CHANGE_MODE: "changeMode",
   CHANGE_FAN_IN_SPEED: "changeFanInSpd",

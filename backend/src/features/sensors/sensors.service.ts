@@ -90,15 +90,15 @@ export class SensorsService {
   }
 
   private toRealtimeSensorUpdate(data: SensorUpdate): RealtimeSensorUpdate {
-    const setup = this.stateReader.getSetupPayload();
+    const rpm = this.stateReader.getFanSpeedRpmPayload();
 
     return {
       co2: data.co2,
       humidity: data.humidity,
       innerTemp: data.tempIn,
       outerTemp: data.tempOut,
-      fanInSpd: setup.fanInSpd,
-      fanOutSpd: setup.fanOutSpd,
+      fanInSpd: rpm.fanInSpd,
+      fanOutSpd: rpm.fanOutSpd,
     };
   }
 }

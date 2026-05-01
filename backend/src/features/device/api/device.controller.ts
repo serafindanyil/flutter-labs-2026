@@ -25,12 +25,12 @@ export class DeviceController {
   @ApiBody({ type: ChangePowerStateDto })
   @ApiOkResponse({ description: "Command accepted" })
   @ApiConflictResponse({ description: "ESP32 is offline" })
-  changePowerState(@Body() body: ChangePowerStateDto): void {
+  async changePowerState(@Body() body: ChangePowerStateDto): Promise<void> {
     if (body?.state !== DEVICE_POWER_STATE.ON && body?.state !== DEVICE_POWER_STATE.OFF) {
       throw new BadRequestException("state must be on or off");
     }
 
-    this.deviceControl.changePowerState(body.state);
+    await this.deviceControl.changePowerState(body.state);
   }
 
   @Post("mode")
@@ -38,11 +38,11 @@ export class DeviceController {
   @ApiBody({ type: ChangeModeDto })
   @ApiOkResponse({ description: "Command accepted" })
   @ApiConflictResponse({ description: "ESP32 is offline" })
-  changeMode(@Body() body: ChangeModeDto): void {
+  async changeMode(@Body() body: ChangeModeDto): Promise<void> {
     if (body?.mode !== DEVICE_MODE.MANUAL && body?.mode !== DEVICE_MODE.AUTO && body?.mode !== DEVICE_MODE.TURBO) {
       throw new BadRequestException("mode must be manual, auto, or turbo");
     }
 
-    this.deviceControl.changeMode(body.mode, body.turboDurationSec);
+    await this.deviceControl.changeMode(body.mode, body.turboDurationSec);
   }
 }

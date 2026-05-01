@@ -15,6 +15,7 @@ import type { FrontendBroadcast } from "../../../shared/types/realtime.types";
 import {
   parseBooleanPayload,
   parseDeviceEnvelope,
+  parseFanSpeedRpmPayload,
   parseInitPayload,
   parseModePayload,
   parseSensorUpdate,
@@ -114,6 +115,9 @@ export class RawDeviceWebSocketService implements OnModuleInit, OnModuleDestroy 
       case DEVICE_MESSAGE_TYPE.UPDATE:
         this.handleSensorUpdate(client, envelope.data);
         break;
+      case DEVICE_MESSAGE_TYPE.FAN_SPEED_RPM:
+        this.handleFanSpeedRpm(client, envelope.data);
+        break;
       case DEVICE_MESSAGE_TYPE.SWITCH_STATE:
         this.handleSwitchState(client, envelope.data);
         break;
@@ -183,6 +187,14 @@ export class RawDeviceWebSocketService implements OnModuleInit, OnModuleDestroy 
       this.broadcast({ type: DEVICE_MESSAGE_TYPE.CHANGE_FAN_OUT_SPEED, data: payload });
       this.broadcastUpdateStatus();
     }
+  }
+
+  private handleFanSpeedRpm(client: WebSocket, data: unknown): void {
+    const payload = parseFanSpeedRpmPayload(data);
+    if (payload === null) return;
+    this.registry.touchEsp32(client);
+    this.state.setFanSpeedRpm(payload);
+    this.checkAndBroadcastStatus();
   }
 
   private handleInit(client: WebSocket, data: unknown): void {

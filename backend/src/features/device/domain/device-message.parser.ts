@@ -1,8 +1,18 @@
 import { DEVICE_KIND, DEVICE_MODE } from "../../../shared/constants/realtime.constants";
-import { MAX_FAN_SPEED_PERCENT, MIN_FAN_SPEED_PERCENT } from "../../../shared/constants/app.constants";
+import {
+  MAX_FAN_SPEED_PERCENT,
+  MAX_FAN_SPEED_RPM,
+  MIN_FAN_SPEED_PERCENT,
+  MIN_FAN_SPEED_RPM,
+} from "../../../shared/constants/app.constants";
 import { isRecord } from "../../../shared/utils/is-record";
 import type { DeviceMode } from "../../../shared/types/realtime.types";
-import type { DeviceClientEnvelope, DeviceInitPayload, DeviceSensorUpdate } from "./device-message.types";
+import type {
+  DeviceClientEnvelope,
+  DeviceFanSpeedRpmUpdate,
+  DeviceInitPayload,
+  DeviceSensorUpdate,
+} from "./device-message.types";
 
 function getFiniteNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -99,4 +109,26 @@ export function parseSpeedPayload(value: unknown): number | null {
 
 function parseSpeedValue(value: unknown): number | null {
   return getFiniteNumberLike(value);
+}
+
+export function parseFanSpeedRpmPayload(value: unknown): DeviceFanSpeedRpmUpdate | null {
+  if (!isRecord(value)) return null;
+
+  const fanInSpd = parseRpmValue(value.fanInSpd ?? value.fanInRpm);
+  const fanOutSpd = parseRpmValue(value.fanOutSpd ?? value.fanOutRpm);
+
+  if (fanInSpd === null || fanOutSpd === null) return null;
+
+  return {
+    fanInSpd,
+    fanOutSpd,
+  };
+}
+
+function parseRpmValue(value: unknown): number | null {
+  const rpm = getFiniteNumberLike(value);
+  if (rpm === null) return null;
+  if (!Number.isInteger(rpm)) return null;
+  if (rpm < MIN_FAN_SPEED_RPM || rpm > MAX_FAN_SPEED_RPM) return null;
+  return rpm;
 }

@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, Inject, Injectable, OnModuleDestroy } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import {
+  DEVICE_COMMAND_RETRY_INTERVAL_MS,
+  DEVICE_COMMAND_RETRY_TIMEOUT_MS,
   MAX_TURBO_DURATION_SECONDS,
   MIN_TURBO_DURATION_SECONDS,
   SECONDS_IN_MS,
@@ -31,16 +33,16 @@ export class DeviceControlService implements OnModuleDestroy {
     return this.state.getClientStatePayload();
   }
 
-  changePowerState(value: DevicePowerState): void {
-    this.ensureEsp32Online();
+  async changePowerState(value: DevicePowerState): Promise<void> {
+    await this.ensureEsp32Online();
     const enabled = this.toSwitchState(value);
     this.state.setSwitchState(enabled);
     this.commandSender.sendSwitchState(enabled);
     this.broadcastUpdateStatus();
   }
 
-  changeMode(mode: DeviceMode, turboDurationSec: number | undefined): void {
-    this.ensureEsp32Online();
+  async changeMode(mode: DeviceMode, turboDurationSec: number | undefined): Promise<void> {
+    await this.ensureEsp32Online();
 
     if (mode !== DEVICE_MODE.TURBO) {
       this.clearTurboTimer();
@@ -87,9 +89,23 @@ export class DeviceControlService implements OnModuleDestroy {
     return value === DEVICE_POWER_STATE.ON;
   }
 
-  private ensureEsp32Online(): void {
+  private async ensureEsp32Online(): Promise<void> {
     if (this.activityReader.hasActiveEsp32()) return;
+
+    const deadline = Date.now() + DEVICE_COMMAND_RETRY_TIMEOUT_MS;
+
+    while (Date.now() < deadline) {
+      await this.delay(DEVICE_COMMAND_RETRY_INTERVAL_MS);
+      if (this.activityReader.hasActiveEsp32()) return;
+    }
+
     throw new ConflictException("ESP32 is offline");
+  }
+
+  private delay(durationMs: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, durationMs);
+    });
   }
 
   private broadcastUpdateStatus(): void {

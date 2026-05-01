@@ -2,12 +2,14 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayInit,
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from "@nestjs/websockets";
 import { OnEvent } from "@nestjs/event-emitter";
+import type { ExtendedError } from "socket.io";
 import { DEVICE_MESSAGE_TYPE, DEVICE_MODE } from "../../shared/constants/realtime.constants";
 import { EVENT_NAMES } from "../../shared/events/event-names";
 import {
@@ -20,6 +22,12 @@ import {
 import { isRecord } from "../../shared/utils/is-record";
 import type { FrontendBroadcast } from "../../shared/types/realtime.types";
 import type { FirebaseAuthVerifier } from "../auth/auth.types";
+import {
+  FIREBASE_AUTH_ERROR_CODE,
+  FirebaseAuthErrorCode,
+  getFirebaseAuthErrorMessage,
+  mapFirebaseAuthErrorCode,
+} from "../auth/firebase-auth-errors";
 import { parseSpeedPayload } from "../device/domain/device-message.parser";
 import type {
   DeviceActivityReader,
@@ -53,13 +61,26 @@ function isAuthenticated(client: FrontendSocket): boolean {
   return client.data.user !== undefined;
 }
 
+interface RealtimeAuthErrorData {
+  code: FirebaseAuthErrorCode;
+}
+
+class RealtimeAuthError extends Error implements ExtendedError {
+  readonly data: RealtimeAuthErrorData;
+
+  constructor(code: FirebaseAuthErrorCode) {
+    super(getFirebaseAuthErrorMessage(code));
+    this.data = { code };
+  }
+}
+
 @Injectable()
 @WebSocketGateway({
   cors: { origin: true },
   perMessageDeflate: false,
   httpCompression: false,
 })
-export class RealtimeGateway implements OnGatewayConnection {
+export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(RealtimeGateway.name);
   private lastUpdateStatusPayload: string | null = null;
 
@@ -74,7 +95,27 @@ export class RealtimeGateway implements OnGatewayConnection {
     @Inject(DEVICE_STATE_WRITER_TOKEN) private readonly stateWriter: DeviceStateWriter,
   ) {}
 
-  async handleConnection(client: FrontendSocket): Promise<void> {
+  afterInit(server: FrontendSocketServer): void {
+    server.use(async (client, next) => {
+      const token = extractHandshakeToken(client);
+
+      if (token === null) {
+        next(new RealtimeAuthError(FIREBASE_AUTH_ERROR_CODE.MISSING_BEARER));
+        return;
+      }
+
+      try {
+        client.data.user = await this.verifier.verifyToken(token);
+        next();
+      } catch (error: unknown) {
+        const code = mapFirebaseAuthErrorCode(error);
+        this.logger.warn(`Socket.IO client rejected by Firebase auth: ${code}`);
+        next(new RealtimeAuthError(code));
+      }
+    });
+  }
+
+  handleConnection(client: FrontendSocket): void {
     const token = extractHandshakeToken(client);
 
     if (token === null) {
@@ -82,13 +123,7 @@ export class RealtimeGateway implements OnGatewayConnection {
       return;
     }
 
-    try {
-      client.data.user = await this.verifier.verifyToken(token);
-      client.emit(DEVICE_MESSAGE_TYPE.UPDATE_STATUS, this.stateReader.getClientStatePayload());
-    } catch {
-      this.logger.warn("Socket.IO client rejected by Firebase auth");
-      client.disconnect(true);
-    }
+    client.emit(DEVICE_MESSAGE_TYPE.UPDATE_STATUS, this.stateReader.getClientStatePayload());
   }
 
   @SubscribeMessage(DEVICE_MESSAGE_TYPE.CHANGE_FAN_IN_SPEED)

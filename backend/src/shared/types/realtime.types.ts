@@ -19,6 +19,11 @@ export interface DeviceSetupPayload {
   fanOutSpd: number | null;
 }
 
+export interface DeviceFanSpeedRpmPayload {
+  fanInSpd: number | null;
+  fanOutSpd: number | null;
+}
+
 export interface DeviceClientStatePayload {
   deviceStatus: DeviceStatus;
   state: DevicePowerState | null;
