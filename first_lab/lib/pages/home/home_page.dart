@@ -70,7 +70,16 @@ class HomePage extends StatelessWidget {
 
   Future<void> _changeMode(BuildContext context, DeviceMode mode) async {
     try {
-      await context.read<DeviceControlCommandService>().changeMode(mode);
+      final result = await context
+          .read<DeviceControlCommandService>()
+          .changeMode(mode);
+      if (!context.mounted) return;
+      if (mode == DeviceMode.turbo && result.turboEndsAt != null) {
+        AppToast.success(
+          context,
+          'Турбо завершиться о ${_formatTime(result.turboEndsAt!)}',
+        );
+      }
     } on DeviceControlCommandException catch (error) {
       if (!context.mounted) return;
       _showCommandError(context, error.error);
@@ -105,5 +114,12 @@ class HomePage extends StatelessWidget {
         AppToast.error(context, 'Не вдалося виконати команду');
         return;
     }
+  }
+
+  String _formatTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    final second = value.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 }

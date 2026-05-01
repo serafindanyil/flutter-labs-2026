@@ -18,31 +18,50 @@ class DeviceControlCommandException implements Exception {
   final DeviceControlCommandError error;
 }
 
+class DeviceControlModeCommandResult {
+  const DeviceControlModeCommandResult({this.turboEndsAt});
+
+  final DateTime? turboEndsAt;
+}
+
 class DeviceControlCommandService {
-  const DeviceControlCommandService({required AuthService authService})
+  DeviceControlCommandService({required AuthService authService})
     : _authService = authService;
 
-  static const int _turboDurationSeconds = 20;
+  static const int _turboDurationSeconds = 10;
+  static const Duration _throttleDuration = Duration(milliseconds: 500);
   static const int _okStatusCode = 200;
   static const int _unauthorizedStatusCode = 401;
   static const int _conflictStatusCode = 409;
   static const int _serverErrorStatusCode = 500;
 
   final AuthService _authService;
+  DateTime? _lastCommandAt;
 
-  Future<void> changeMode(DeviceMode mode) {
+  Future<DeviceControlModeCommandResult> changeMode(DeviceMode mode) async {
+    if (_isThrottled()) return const DeviceControlModeCommandResult();
+
     final body = <String, Object>{'mode': mode.value};
     if (mode == DeviceMode.turbo) {
       body['turboDurationSec'] = _turboDurationSeconds;
     }
-    return _post('/device/mode', body);
+    final response = await _post('/device/mode', body);
+    return DeviceControlModeCommandResult(
+      turboEndsAt: _parseDateTime(
+        response['turboEndsAt'] ?? response['turboEndAt'],
+      ),
+    );
   }
 
   Future<void> changePowerState(DevicePowerState state) {
+    if (_isThrottled()) return Future<void>.value();
     return _post('/device/state', {'state': state.value});
   }
 
-  Future<void> _post(String path, Map<String, Object> body) async {
+  Future<Map<String, Object?>> _post(
+    String path,
+    Map<String, Object> body,
+  ) async {
     final token = await _authService.getIdToken();
     if (token == null || token.trim().isEmpty) {
       throw const DeviceControlCommandException(
@@ -58,9 +77,11 @@ class DeviceControlCommandService {
       request.write(jsonEncode(body));
 
       final response = await request.close();
-      await response.drain<void>();
+      final responseBody = await response.transform(utf8.decoder).join();
 
-      if (response.statusCode == _okStatusCode) return;
+      if (response.statusCode == _okStatusCode) {
+        return _decodeResponse(responseBody);
+      }
       throw DeviceControlCommandException(_mapStatusCode(response.statusCode));
     } on DeviceControlCommandException {
       rethrow;
@@ -76,6 +97,34 @@ class DeviceControlCommandService {
   Uri _buildUri(String path) {
     final baseUrl = dotenv.env['API_URL'] ?? 'http://localhost:3000';
     return Uri.parse(baseUrl).resolve(path);
+  }
+
+  bool _isThrottled() {
+    final now = DateTime.now();
+    final lastCommandAt = _lastCommandAt;
+    if (lastCommandAt != null &&
+        now.difference(lastCommandAt) < _throttleDuration) {
+      return true;
+    }
+    _lastCommandAt = now;
+    return false;
+  }
+
+  Map<String, Object?> _decodeResponse(String responseBody) {
+    if (responseBody.trim().isEmpty) return const {};
+    final decoded = jsonDecode(responseBody);
+    if (decoded is! Map) return const {};
+
+    final response = <String, Object?>{};
+    for (final entry in decoded.entries) {
+      response[entry.key.toString()] = entry.value;
+    }
+    return response;
+  }
+
+  DateTime? _parseDateTime(Object? value) {
+    if (value is! String || value.trim().isEmpty) return null;
+    return DateTime.tryParse(value)?.toLocal();
   }
 
   DeviceControlCommandError _mapStatusCode(int statusCode) {

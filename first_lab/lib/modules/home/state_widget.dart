@@ -5,7 +5,7 @@ import 'package:first_lab/shared/widgets/primary_container.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class StateWidget extends StatefulWidget {
+class StateWidget extends StatelessWidget {
   final DevicePowerState? state;
   final bool isDisabled;
   final ValueChanged<DevicePowerState>? onStateChanged;
@@ -18,25 +18,14 @@ class StateWidget extends StatefulWidget {
   });
 
   @override
-  State<StateWidget> createState() => _StateWidgetState();
-}
-
-class _StateWidgetState extends State<StateWidget> {
-  static const Duration _throttleDuration = Duration(milliseconds: 500);
-
-  DateTime? _lastTapAt;
-
-  @override
   Widget build(BuildContext context) {
-    final isOn = widget.state == DevicePowerState.on;
-    final buttonColor = widget.isDisabled
+    final isOn = state == DevicePowerState.on;
+    final buttonColor = isDisabled
         ? AppColors.disabledAccent
         : isOn
         ? AppColors.blue500
         : AppColors.blue200;
-    final iconColor = widget.isDisabled || isOn
-        ? AppColors.white
-        : AppColors.blue500;
+    final iconColor = isDisabled || isOn ? AppColors.white : AppColors.blue500;
 
     return PrimaryContainer(
       child: Column(
@@ -47,7 +36,7 @@ class _StateWidgetState extends State<StateWidget> {
             children: [
               Text('Стан', style: Theme.of(context).textTheme.displayMedium),
               Text(
-                _getStateName(widget.state),
+                _getStateName(state),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
@@ -58,9 +47,9 @@ class _StateWidgetState extends State<StateWidget> {
           Align(
             alignment: Alignment.centerRight,
             child: PressableButton(
-              onTap: widget.isDisabled || widget.state == null
+              onTap: isDisabled || state == null
                   ? null
-                  : () => _onStateTap(widget.state!),
+                  : () => onStateChanged?.call(_nextState(state!)),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -94,15 +83,5 @@ class _StateWidgetState extends State<StateWidget> {
     return state == DevicePowerState.on
         ? DevicePowerState.off
         : DevicePowerState.on;
-  }
-
-  void _onStateTap(DevicePowerState state) {
-    final now = DateTime.now();
-    final lastTapAt = _lastTapAt;
-    if (lastTapAt != null && now.difference(lastTapAt) < _throttleDuration) {
-      return;
-    }
-    _lastTapAt = now;
-    widget.onStateChanged?.call(_nextState(state));
   }
 }
