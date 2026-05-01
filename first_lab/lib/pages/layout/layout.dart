@@ -2,6 +2,8 @@ import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/pages/home/home_page.dart';
 import 'package:first_lab/pages/settings/settings_page.dart';
 import 'package:first_lab/pages/statistics/statistics_page.dart';
+import 'package:first_lab/shared/network/bloc/network_cubit.dart';
+import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/network/widgets/disabled_wrapper.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/styles/app_shadows.dart';
@@ -26,8 +28,6 @@ class _LayoutState extends State<Layout> {
   ];
 
   void _onTabTapped(int index) {
-    if (Disabled.of(context)) return;
-
     setState(() {
       _currentIndex = index;
     });
@@ -50,12 +50,25 @@ class _LayoutState extends State<Layout> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.zero,
-          child: Disabled(
-            isDisabled: Disabled.of(context),
-            child: _NavBar(
-              currentIndex: _currentIndex,
-              onTabTapped: _onTabTapped,
-            ),
+          child: BlocBuilder<NetworkCubit, NetworkState>(
+            builder: (context, networkState) {
+              return BlocBuilder<DeviceControlCubit, DeviceControlState>(
+                builder: (context, deviceControlState) {
+                  final isDisabled = DeviceControlAvailability.isDisabled(
+                    networkStatus: networkState.status,
+                    deviceControl: deviceControlState,
+                  );
+
+                  return Disabled(
+                    isDisabled: isDisabled,
+                    child: _NavBar(
+                      currentIndex: _currentIndex,
+                      onTabTapped: _onTabTapped,
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
@@ -187,7 +200,7 @@ class _BottomNavItem extends StatelessWidget {
         : (isSelected ? AppColors.blue500 : AppColors.blue300);
 
     return GestureDetector(
-      onTap: isDisabled ? null : onTap,
+      onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Icon(icon, size: 32, color: color),
     );

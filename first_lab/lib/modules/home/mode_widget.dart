@@ -33,7 +33,7 @@ class ModeWidget extends StatelessWidget {
             height: 56,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: isDisabled ? AppColors.disabledAccent : AppColors.blue400,
+              color: isDisabled ? AppColors.disabled : AppColors.blue400,
               borderRadius: BorderRadius.circular(30),
             ),
             child: LayoutBuilder(

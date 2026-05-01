@@ -1,93 +1,121 @@
-import 'package:first_lab/main.dart';
-import 'package:first_lab/modules/counter/counter_module.dart';
+import 'package:first_lab/modules/device_control/device_control_module.dart';
+import 'package:first_lab/modules/home/mode_widget.dart';
+import 'package:first_lab/modules/home/state_widget.dart';
+import 'package:first_lab/shared/network/bloc/network_state.dart';
+import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-String _readAssetName(WidgetTester tester) {
-  final imageFinder = find.byType(Image);
-  expect(imageFinder, findsOneWidget);
-  final image = tester.widget<Image>(imageFinder);
-  final provider = image.image as AssetImage;
-  return provider.assetName;
-}
-
-String _readTextByKey(WidgetTester tester, String keyValue) {
-  final textFinder = find.byKey(Key(keyValue));
-  expect(textFinder, findsOneWidget);
-  final textWidget = tester.widget<Text>(textFinder);
-  return textWidget.data ?? '';
-}
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() {
-  testWidgets('counter increments smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+  test('applies updateStatus payload', () {
+    final cubit = DeviceControlCubit();
 
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    cubit.applyUpdateStatus({
+      'deviceStatus': 'online',
+      'state': 'on',
+      'mode': 'auto',
+      'fanInSpd': 45,
+      'fanOutSpd': 55,
+      'turboEndsAt': '2026-04-30T12:15:00.000Z',
+    });
 
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
+    expect(cubit.state.hasInitialStatus, isTrue);
+    expect(cubit.state.deviceStatus, DeviceStatus.online);
+    expect(cubit.state.state, DevicePowerState.on);
+    expect(cubit.state.mode, DeviceMode.auto);
+    expect(cubit.state.fanInSpd, 45);
+    expect(cubit.state.fanOutSpd, 55);
+    expect(cubit.state.turboEndsAt, isNotNull);
 
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    cubit.close();
   });
 
-  testWidgets('cycles through three images before unlock', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
+  test('defaults malformed updateStatus payload safely', () {
+    final cubit = DeviceControlCubit();
 
-    expect(_readAssetName(tester), CounterModule.stageImagePaths[0]);
+    cubit.applyUpdateStatus({
+      'deviceStatus': 'unknown',
+      'state': 'bad',
+      'mode': 'bad',
+      'fanInSpd': 'fast',
+      'fanOutSpd': null,
+      'turboEndsAt': 'bad-date',
+    });
 
-    final incrementButton = find.byIcon(Icons.add);
+    expect(cubit.state.hasInitialStatus, isTrue);
+    expect(cubit.state.deviceStatus, DeviceStatus.offline);
+    expect(cubit.state.state, isNull);
+    expect(cubit.state.mode, isNull);
+    expect(cubit.state.fanInSpd, isNull);
+    expect(cubit.state.fanOutSpd, isNull);
+    expect(cubit.state.turboEndsAt, isNull);
 
-    await tester.tap(incrementButton);
-    await tester.pumpAndSettle();
-    expect(_readAssetName(tester), CounterModule.stageImagePaths[1]);
-
-    await tester.tap(incrementButton);
-    await tester.pumpAndSettle();
-    expect(_readAssetName(tester), CounterModule.stageImagePaths[2]);
-
-    await tester.tap(incrementButton);
-    await tester.pumpAndSettle();
-    expect(_readAssetName(tester), CounterModule.stageImagePaths[0]);
+    cubit.close();
   });
 
-  testWidgets('shows fourth image at 20 counter', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
-
-    final incrementButton = find.byIcon(Icons.add);
-
-    for (var i = 0; i < CounterModule.unlockThreshold; i++) {
-      await tester.tap(incrementButton);
-      await tester.pumpAndSettle();
-    }
-
-    expect(find.text('20'), findsOneWidget);
-    expect(
-      _readTextByKey(tester, 'unlock_status'),
-      'Threshold reached. The fourth image is active.',
+  test('centralized availability blocks controls for unavailable states', () {
+    const onlineState = DeviceControlState(
+      deviceStatus: DeviceStatus.online,
+      hasInitialStatus: true,
     );
-    expect(_readAssetName(tester), CounterModule.unlockedImagePath);
+    const offlineState = DeviceControlState(hasInitialStatus: true);
+
+    expect(
+      DeviceControlAvailability.isDisabled(
+        networkStatus: NetworkStatus.online,
+        deviceControl: onlineState,
+      ),
+      isFalse,
+    );
+    expect(
+      DeviceControlAvailability.isDisabled(
+        networkStatus: NetworkStatus.offline,
+        deviceControl: onlineState,
+      ),
+      isTrue,
+    );
+    expect(
+      DeviceControlAvailability.isDisabled(
+        networkStatus: NetworkStatus.online,
+        deviceControl: offlineState,
+      ),
+      isTrue,
+    );
+    expect(
+      DeviceControlAvailability.isDisabled(
+        networkStatus: NetworkStatus.online,
+        deviceControl: const DeviceControlState(),
+      ),
+      isTrue,
+    );
   });
 
-  testWidgets('tap on image resets counter', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+  testWidgets('mode widget renders socket mode as read-only', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ModeWidget(mode: DeviceMode.auto, isDisabled: false),
+        ),
+      ),
+    );
 
-    final incrementButton = find.byIcon(Icons.add);
-    for (var i = 0; i < 5; i++) {
-      await tester.tap(incrementButton);
-      await tester.pumpAndSettle();
-    }
+    expect(find.text('Режим'), findsOneWidget);
+    expect(find.text('Авто'), findsNWidgets(2));
+  });
 
-    expect(find.text('5'), findsOneWidget);
-    expect(_readAssetName(tester), CounterModule.stageImagePaths[2]);
+  testWidgets('state widget uses disabled grey accent', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: StateWidget(state: DevicePowerState.on, isDisabled: true),
+        ),
+      ),
+    );
 
-    await tester.tap(find.byKey(const Key('counter_image')));
-    await tester.pumpAndSettle();
+    final icon = tester.widget<Icon>(find.byIcon(LucideIcons.power));
 
-    expect(find.text('0'), findsOneWidget);
-    expect(_readAssetName(tester), CounterModule.stageImagePaths[0]);
+    expect(find.text('Увімк.'), findsOneWidget);
+    expect(icon.color, AppColors.white);
   });
 }
