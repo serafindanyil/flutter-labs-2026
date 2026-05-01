@@ -112,6 +112,9 @@ class SensorIndicatorsList extends StatelessWidget {
     if (value < 1200) {
       return const _SensorStatus('Задовільно', AppColors.warning);
     }
+    if (value < 3000) {
+      return const _SensorStatus('Погано', AppColors.danger);
+    }
     return const _SensorStatus('Дуже погано', AppColors.danger);
   }
 }
