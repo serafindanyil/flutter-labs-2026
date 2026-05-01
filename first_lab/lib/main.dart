@@ -53,6 +53,11 @@ class MyApp extends StatelessWidget {
             authService: context.read<AuthService>(),
           ),
         ),
+        RepositoryProvider<DeviceSensorsHistoryService>(
+          create: (context) => DeviceSensorsHistoryService(
+            authService: context.read<AuthService>(),
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -70,6 +75,11 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider<DeviceSensorsCubit>(
             create: (context) => DeviceSensorsCubit(),
+          ),
+          BlocProvider<DeviceSensorsHistoryCubit>(
+            create: (context) => DeviceSensorsHistoryCubit(
+              service: context.read<DeviceSensorsHistoryService>(),
+            ),
           ),
           BlocProvider<RealtimeCubit>(
             create: (context) => RealtimeCubit(
@@ -109,6 +119,7 @@ class MyApp extends StatelessWidget {
                           listener: (context, state) {
                             if (state.status == NetworkStatus.offline) {
                               context.read<RealtimeCubit>().disconnect();
+                              context.read<DeviceSensorsHistoryCubit>().stop();
                               AppToast.warning(
                                 context,
                                 'Немає підключення до інтернету',
@@ -117,6 +128,9 @@ class MyApp extends StatelessWidget {
                               if (context.read<AuthBloc>().state
                                   is AuthSuccess) {
                                 context.read<RealtimeCubit>().connect();
+                                context
+                                    .read<DeviceSensorsHistoryCubit>()
+                                    .start();
                               }
                               AppToast.success(
                                 context,
@@ -148,9 +162,15 @@ class MyApp extends StatelessWidget {
                                   NetworkStatus.online;
                               if (isOnline) {
                                 context.read<RealtimeCubit>().connect();
+                                context
+                                    .read<DeviceSensorsHistoryCubit>()
+                                    .start();
                               }
                             } else if (state is AuthUnauthenticated) {
                               context.read<RealtimeCubit>().disconnect();
+                              context.read<DeviceSensorsHistoryCubit>().stop(
+                                shouldReset: true,
+                              );
                               context.read<DeviceControlCubit>().reset();
                               context.read<DeviceSensorsCubit>().reset();
                             }
