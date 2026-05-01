@@ -3,6 +3,8 @@ import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
+import 'package:first_lab/pages/settings/widgets/edit_profile_button.dart';
+import 'package:first_lab/pages/settings/widgets/profile_field_card.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
@@ -105,7 +107,7 @@ class _SettingsPageState extends State<SettingsPage> {
       });
       AppToast.success(context, 'Зміни збережено!');
     } catch (_) {
-      AppToast.error(context, 'ПОмилка збереження');
+      AppToast.error(context, 'Помилка збереження');
     }
   }
 
@@ -131,11 +133,11 @@ class _SettingsPageState extends State<SettingsPage> {
               style: Theme.of(context).textTheme.displayLarge,
             ),
             const SizedBox(height: 32),
-            _ProfileFieldCard(
+            ProfileFieldCard(
               label: 'Ім\'я',
               hasStaticChildHeight: true,
               trailing: !_isEditing
-                  ? _EditProfileButton(
+                  ? EditProfileButton(
                       isEnabled: hasNetworkAccess,
                       onTap: () => _startEditing(hasNetworkAccess),
                     )
@@ -154,7 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
             ),
             const SizedBox(height: 16),
-            _ProfileFieldCard(
+            ProfileFieldCard(
               label: 'Email',
               child: Text(
                 _currentEmail,
@@ -182,81 +184,5 @@ class _SettingsPageState extends State<SettingsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameFocusNode.requestFocus();
     });
-  }
-}
-
-class _EditProfileButton extends StatelessWidget {
-  final bool isEnabled;
-  final VoidCallback onTap;
-
-  const _EditProfileButton({required this.isEnabled, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: isEnabled ? onTap : null,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isEnabled ? AppColors.blue100 : AppColors.gray100,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Icon(
-          LucideIcons.pencil,
-          color: isEnabled ? AppColors.blue500 : AppColors.gray500,
-          size: 24,
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileFieldCard extends StatelessWidget {
-  final String label;
-  final Widget child;
-  final Widget? trailing;
-  final bool hasStaticChildHeight;
-
-  const _ProfileFieldCard({
-    required this.label,
-    required this.child,
-    this.trailing,
-    this.hasStaticChildHeight = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Widget content = Row(
-      children: [
-        Expanded(child: child),
-        if (trailing != null) ...[const SizedBox(width: 16), trailing!],
-      ],
-    );
-
-    if (hasStaticChildHeight) {
-      content = SizedBox(height: 60, child: content);
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: AppColors.gray500),
-          ),
-          const SizedBox(height: 12),
-          content,
-        ],
-      ),
-    );
   }
 }
