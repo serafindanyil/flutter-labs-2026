@@ -1,6 +1,7 @@
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 typedef UpdateStatusHandler = void Function(Map<String, Object?> payload);
+typedef SensorsHandler = void Function(Map<String, Object?> payload);
 typedef RealtimeVoidHandler = void Function();
 typedef RealtimeErrorHandler = void Function(Object? error);
 
@@ -16,6 +17,7 @@ class RealtimeSocketService {
     required RealtimeVoidHandler onDisconnect,
     required RealtimeErrorHandler onError,
     required UpdateStatusHandler onUpdateStatus,
+    required SensorsHandler onSensors,
   }) {
     disconnect();
 
@@ -38,6 +40,12 @@ class RealtimeSocketService {
       final payload = _parsePayload(data);
       if (payload != null) {
         onUpdateStatus(payload);
+      }
+    });
+    socket.on('sensors', (Object? data) {
+      final payload = _parsePayload(data);
+      if (payload != null) {
+        onSensors(payload);
       }
     });
 

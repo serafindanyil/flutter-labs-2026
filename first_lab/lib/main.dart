@@ -7,6 +7,7 @@ import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/bloc/auth_state.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/modules/device_control/device_control_module.dart';
+import 'package:first_lab/modules/device_sensors/device_sensors_module.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/layout/layout.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
@@ -62,6 +63,9 @@ class MyApp extends StatelessWidget {
           BlocProvider<DeviceControlCubit>(
             create: (context) => DeviceControlCubit(),
           ),
+          BlocProvider<DeviceSensorsCubit>(
+            create: (context) => DeviceSensorsCubit(),
+          ),
           BlocProvider<RealtimeCubit>(
             create: (context) => RealtimeCubit(
               authService: context.read<AuthService>(),
@@ -69,6 +73,7 @@ class MyApp extends StatelessWidget {
               onUpdateStatus: context
                   .read<DeviceControlCubit>()
                   .applyUpdateStatus,
+              onSensors: context.read<DeviceSensorsCubit>().applySensors,
             ),
           ),
         ],
@@ -142,6 +147,7 @@ class MyApp extends StatelessWidget {
                             } else if (state is AuthUnauthenticated) {
                               context.read<RealtimeCubit>().disconnect();
                               context.read<DeviceControlCubit>().reset();
+                              context.read<DeviceSensorsCubit>().reset();
                             }
                           },
                         ),

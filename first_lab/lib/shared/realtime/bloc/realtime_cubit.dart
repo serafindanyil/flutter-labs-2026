@@ -11,9 +11,11 @@ class RealtimeCubit extends Cubit<RealtimeState> {
     required AuthService authService,
     required RealtimeSocketService socketService,
     required UpdateStatusHandler onUpdateStatus,
+    required SensorsHandler onSensors,
   }) : _authService = authService,
        _socketService = socketService,
        _onUpdateStatus = onUpdateStatus,
+       _onSensors = onSensors,
        super(const RealtimeState());
 
   static const List<Duration> _retryDelays = [
@@ -28,6 +30,7 @@ class RealtimeCubit extends Cubit<RealtimeState> {
   final AuthService _authService;
   final RealtimeSocketService _socketService;
   final UpdateStatusHandler _onUpdateStatus;
+  final SensorsHandler _onSensors;
 
   Timer? _retryTimer;
   bool _shouldStayConnected = false;
@@ -86,6 +89,7 @@ class RealtimeCubit extends Cubit<RealtimeState> {
       onDisconnect: _handleDisconnect,
       onError: _handleError,
       onUpdateStatus: _onUpdateStatus,
+      onSensors: _onSensors,
     );
   }
 
