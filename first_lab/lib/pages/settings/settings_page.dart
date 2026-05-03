@@ -4,6 +4,7 @@ import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
 import 'package:first_lab/pages/settings/bloc/settings_cubit.dart';
 import 'package:first_lab/pages/settings/bloc/settings_state.dart';
+import 'package:first_lab/pages/settings/widgets/secret_flashlight_listener.dart';
 import 'package:first_lab/pages/settings/widgets/settings_content.dart';
 import 'package:first_lab/shared/network/bloc/network_cubit.dart';
 import 'package:first_lab/shared/network/bloc/network_state.dart';
@@ -20,7 +21,7 @@ class SettingsPage extends StatelessWidget {
     return BlocProvider(
       create: (context) =>
           SettingsCubit(authService: context.read<AuthService>()),
-      child: const _SettingsView(),
+      child: const SecretFlashlightListener(child: _SettingsView()),
     );
   }
 }
