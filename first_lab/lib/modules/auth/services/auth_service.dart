@@ -27,16 +27,10 @@ class FirebaseAuthService implements AuthService {
   @override
   Future<bool> checkEmailExists(String email) async {
     try {
-      // Trying to sign up with a dummy password to explicitly
-      // check if email is available.
-      // This bypasses Firebase Auth Email Enumeration Protection
-      // without exposing backend.
       final cred = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: 'I_KNOW_DEAR_TEACHER_DENYS_IS_BAD_PRACTICE_AT_ALL',
       );
-      // If it succeeds, the email was NOT taken. We immediately delete the
-      // dummy user to keep it available for actual registration.
       await cred.user?.delete();
       return false;
     } on FirebaseAuthException catch (e) {

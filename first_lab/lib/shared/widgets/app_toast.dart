@@ -76,7 +76,7 @@ class AppToast {
         return SlideTransition(
           position:
               Tween<Offset>(
-                begin: const Offset(0, 1), // Slide from bottom
+                begin: const Offset(0, 1),
                 end: const Offset(0, 0),
               ).animate(
                 CurvedAnimation(

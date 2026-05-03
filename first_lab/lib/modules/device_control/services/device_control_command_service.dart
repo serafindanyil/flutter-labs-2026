@@ -2,15 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:first_lab/modules/auth/services/auth_service.dart';
+import 'package:first_lab/modules/device_control/models/device_control_command_error.dart';
 import 'package:first_lab/modules/device_control/models/device_control_types.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-enum DeviceControlCommandError {
-  deviceOffline,
-  serverError,
-  unauthorized,
-  unknown,
-}
 
 class DeviceControlCommandException implements Exception {
   const DeviceControlCommandException(this.error);

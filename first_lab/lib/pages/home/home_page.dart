@@ -12,89 +12,83 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NetworkCubit, NetworkState>(
-      builder: (context, networkState) {
-        return BlocBuilder<DeviceControlCubit, DeviceControlState>(
-          builder: (context, deviceControlState) {
-            final isControlsDisabled = DeviceControlAvailability.isDisabled(
-              networkStatus: networkState.status,
-              deviceControl: deviceControlState,
-            );
+    return BlocListener<DeviceControlCubit, DeviceControlState>(
+      listenWhen: (previous, current) =>
+          previous.commandVersion != current.commandVersion,
+      listener: _listenCommandResult,
+      child: BlocBuilder<NetworkCubit, NetworkState>(
+        builder: (context, networkState) {
+          return BlocBuilder<DeviceControlCubit, DeviceControlState>(
+            builder: (context, deviceControlState) {
+              final isControlsDisabled = DeviceControlAvailability.isDisabled(
+                networkStatus: networkState.status,
+                deviceControl: deviceControlState,
+              );
 
-            return ListView(
-              padding: const EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 16,
-                bottom: 120,
-              ),
-              children: [
-                Text(
-                  'Керування',
-                  style: Theme.of(context).textTheme.displayLarge,
+              return ListView(
+                padding: const EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 16,
+                  bottom: 120,
                 ),
-                const SizedBox(height: 24),
-                ModeWidget(
-                  mode: deviceControlState.mode,
-                  isDisabled: isControlsDisabled,
-                  onModeChanged: (mode) => _changeMode(context, mode),
-                ),
-                const SizedBox(height: 16),
-                StateWidget(
-                  state: deviceControlState.state,
-                  isDisabled: isControlsDisabled,
-                  onStateChanged: (state) => _changeState(context, state),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'Термінові сповіщення',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                const SizedBox(height: 16),
-                const EmergencyNotification(
-                  title: 'Перевищено рівень CO2',
-                  icon: LucideIcons.cloud,
-                ),
-                const SizedBox(height: 16),
-                const EmergencyNotification(
-                  title: 'Велика різниця температур',
-                  icon: LucideIcons.thermometer,
-                ),
-              ],
-            );
-          },
-        );
-      },
+                children: [
+                  Text(
+                    'Керування',
+                    style: Theme.of(context).textTheme.displayLarge,
+                  ),
+                  const SizedBox(height: 24),
+                  ModeWidget(
+                    mode: deviceControlState.mode,
+                    isDisabled: isControlsDisabled,
+                    onModeChanged: context
+                        .read<DeviceControlCubit>()
+                        .changeMode,
+                  ),
+                  const SizedBox(height: 16),
+                  StateWidget(
+                    state: deviceControlState.state,
+                    isDisabled: isControlsDisabled,
+                    onStateChanged: context
+                        .read<DeviceControlCubit>()
+                        .changePowerState,
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Термінові сповіщення',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  const EmergencyNotification(
+                    title: 'Перевищено рівень CO2',
+                    icon: LucideIcons.cloud,
+                  ),
+                  const SizedBox(height: 16),
+                  const EmergencyNotification(
+                    title: 'Велика різниця температур',
+                    icon: LucideIcons.thermometer,
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  Future<void> _changeMode(BuildContext context, DeviceMode mode) async {
-    try {
-      final result = await context
-          .read<DeviceControlCommandService>()
-          .changeMode(mode);
-      if (!context.mounted) return;
-      if (mode == DeviceMode.turbo && result.turboEndsAt != null) {
-        AppToast.success(
-          context,
-          'Турбо завершиться о ${_formatTime(result.turboEndsAt!)}',
-        );
-      }
-    } on DeviceControlCommandException catch (error) {
-      if (!context.mounted) return;
-      _showCommandError(context, error.error);
+  void _listenCommandResult(BuildContext context, DeviceControlState state) {
+    if (state.commandStatus == DeviceCommandStatus.success &&
+        state.commandTurboEndsAt != null) {
+      AppToast.success(
+        context,
+        'Турбо завершиться о ${_formatTime(state.commandTurboEndsAt!)}',
+      );
+      return;
     }
-  }
-
-  Future<void> _changeState(
-    BuildContext context,
-    DevicePowerState state,
-  ) async {
-    try {
-      await context.read<DeviceControlCommandService>().changePowerState(state);
-    } on DeviceControlCommandException catch (error) {
-      if (!context.mounted) return;
-      _showCommandError(context, error.error);
+    final error = state.commandError;
+    if (state.commandStatus == DeviceCommandStatus.failure && error != null) {
+      _showCommandError(context, error);
     }
   }
 

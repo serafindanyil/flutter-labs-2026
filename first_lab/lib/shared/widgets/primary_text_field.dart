@@ -1,5 +1,6 @@
 import 'package:first_lab/shared/constants/auth_constants.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
+import 'package:first_lab/shared/widgets/primary_text_field_error.dart';
 import 'package:flutter/material.dart';
 
 class PrimaryTextField extends StatefulWidget {
@@ -133,35 +134,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
                 ],
               ),
             ),
-            Positioned(
-              left: 4,
-              right: 0,
-              bottom: -22,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                opacity: widget.errorText != null ? 1.0 : 0.0,
-                child: widget.errorText != null
-                    ? Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline_rounded,
-                            size: 16,
-                            color: AppColors.red,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              widget.errorText!,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: AppColors.red),
-                            ),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ),
+            PrimaryTextFieldError(errorText: widget.errorText),
           ],
         ),
       ],

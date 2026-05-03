@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
+import 'package:first_lab/shared/realtime/bloc/realtime_auth_error_parser.dart';
+import 'package:first_lab/shared/realtime/bloc/realtime_retry_policy.dart';
 import 'package:first_lab/shared/realtime/bloc/realtime_state.dart';
 import 'package:first_lab/shared/realtime/services/realtime_socket_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class RealtimeCubit extends Cubit<RealtimeState> {
+part 'realtime_retry_actions.dart';
+
+class RealtimeCubit extends Cubit<RealtimeState> with RealtimeRetryActions {
   RealtimeCubit({
     required AuthService authService,
     required RealtimeSocketService socketService,
@@ -18,28 +22,21 @@ class RealtimeCubit extends Cubit<RealtimeState> {
        _onSensors = onSensors,
        super(const RealtimeState());
 
-  static const List<Duration> _retryDelays = [
-    Duration(seconds: 1),
-    Duration(seconds: 2),
-    Duration(seconds: 4),
-    Duration(seconds: 8),
-    Duration(seconds: 16),
-    Duration(seconds: 30),
-  ];
-  static const Set<String> _authErrorCodes = {
-    'auth/missing-bearer',
-    'auth/id-token-expired',
-    'auth/id-token-invalid',
-  };
+  static const RealtimeRetryPolicy _retryPolicy = RealtimeRetryPolicy();
+  static const RealtimeAuthErrorParser _authErrorParser =
+      RealtimeAuthErrorParser();
 
   final AuthService _authService;
   final RealtimeSocketService _socketService;
   final UpdateStatusHandler _onUpdateStatus;
   final SensorsHandler _onSensors;
 
+  @override
   Timer? _retryTimer;
+  @override
   bool _shouldStayConnected = false;
   bool _lastConnectForcedRefresh = false;
+  @override
   int _retryAttempt = 0;
 
   Future<void> connect() async {
@@ -68,6 +65,7 @@ class RealtimeCubit extends Cubit<RealtimeState> {
     }
   }
 
+  @override
   Future<void> _connect({required bool forceRefresh}) async {
     if (!_shouldStayConnected || isClosed) return;
     _lastConnectForcedRefresh = forceRefresh;
@@ -118,85 +116,12 @@ class RealtimeCubit extends Cubit<RealtimeState> {
     if (!_shouldStayConnected || isClosed) return;
     _socketService.disconnect();
 
-    if (_isAuthError(error) && !_lastConnectForcedRefresh) {
+    if (_authErrorParser.isAuthError(error) && !_lastConnectForcedRefresh) {
       _retryNowWithFreshToken();
       return;
     }
 
     _scheduleRetry(forceRefresh: true);
-  }
-
-  void _retryNowWithFreshToken() {
-    if (!_shouldStayConnected || isClosed) return;
-
-    _retryTimer?.cancel();
-    _retryTimer = null;
-    _retryAttempt += 1;
-
-    emit(
-      state.copyWith(
-        status: RealtimeStatus.reconnecting,
-        retryAttempt: _retryAttempt,
-      ),
-    );
-
-    unawaited(_connect(forceRefresh: true));
-  }
-
-  void _scheduleRetry({required bool forceRefresh}) {
-    if (!_shouldStayConnected || isClosed) return;
-    if (_retryTimer?.isActive ?? false) return;
-
-    _retryAttempt += 1;
-    final delay = _retryDelay(_retryAttempt);
-
-    emit(
-      state.copyWith(
-        status: RealtimeStatus.reconnecting,
-        retryAttempt: _retryAttempt,
-      ),
-    );
-
-    _retryTimer = Timer(delay, () {
-      _retryTimer = null;
-      _connect(forceRefresh: forceRefresh);
-    });
-  }
-
-  Duration _retryDelay(int attempt) {
-    final index = attempt - 1;
-    if (index < _retryDelays.length) return _retryDelays[index];
-    return _retryDelays.last;
-  }
-
-  bool _isAuthError(Object? error) {
-    final code = _extractAuthErrorCode(error);
-    return code != null && _authErrorCodes.contains(code);
-  }
-
-  String? _extractAuthErrorCode(Object? error) {
-    final payload = _parsePayload(error);
-    final code = payload?['code'];
-    if (code is String) return code;
-
-    final data = payload?['data'];
-    final dataPayload = _parsePayload(data);
-    final dataCode = dataPayload?['code'];
-    if (dataCode is String) return dataCode;
-
-    return null;
-  }
-
-  Map<String, Object?>? _parsePayload(Object? data) {
-    if (data is Map<String, Object?>) return data;
-    if (data is Map<Object?, Object?>) {
-      final payload = <String, Object?>{};
-      for (final entry in data.entries) {
-        payload[entry.key.toString()] = entry.value;
-      }
-      return payload;
-    }
-    return null;
   }
 
   @override

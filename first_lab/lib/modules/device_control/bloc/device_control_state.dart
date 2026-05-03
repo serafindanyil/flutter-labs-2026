@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:first_lab/modules/device_control/models/device_control_command_error.dart';
 import 'package:first_lab/modules/device_control/models/device_control_types.dart';
 
 class DeviceControlState extends Equatable {
@@ -10,6 +11,10 @@ class DeviceControlState extends Equatable {
     this.fanOutSpd,
     this.turboEndsAt,
     this.hasInitialStatus = false,
+    this.commandStatus = DeviceCommandStatus.idle,
+    this.commandError,
+    this.commandTurboEndsAt,
+    this.commandVersion = 0,
   });
 
   final DeviceStatus deviceStatus;
@@ -19,6 +24,10 @@ class DeviceControlState extends Equatable {
   final num? fanOutSpd;
   final DateTime? turboEndsAt;
   final bool hasInitialStatus;
+  final DeviceCommandStatus commandStatus;
+  final DeviceControlCommandError? commandError;
+  final DateTime? commandTurboEndsAt;
+  final int commandVersion;
 
   DeviceControlState copyWith({
     DeviceStatus? deviceStatus,
@@ -33,6 +42,12 @@ class DeviceControlState extends Equatable {
     DateTime? turboEndsAt,
     bool clearTurboEndsAt = false,
     bool? hasInitialStatus,
+    DeviceCommandStatus? commandStatus,
+    DeviceControlCommandError? commandError,
+    bool clearCommandError = false,
+    DateTime? commandTurboEndsAt,
+    bool clearCommandTurboEndsAt = false,
+    int? commandVersion,
   }) {
     return DeviceControlState(
       deviceStatus: deviceStatus ?? this.deviceStatus,
@@ -42,6 +57,14 @@ class DeviceControlState extends Equatable {
       fanOutSpd: clearFanOutSpd ? null : fanOutSpd ?? this.fanOutSpd,
       turboEndsAt: clearTurboEndsAt ? null : turboEndsAt ?? this.turboEndsAt,
       hasInitialStatus: hasInitialStatus ?? this.hasInitialStatus,
+      commandStatus: commandStatus ?? this.commandStatus,
+      commandError: clearCommandError
+          ? null
+          : commandError ?? this.commandError,
+      commandTurboEndsAt: clearCommandTurboEndsAt
+          ? null
+          : commandTurboEndsAt ?? this.commandTurboEndsAt,
+      commandVersion: commandVersion ?? this.commandVersion,
     );
   }
 
@@ -54,5 +77,11 @@ class DeviceControlState extends Equatable {
     fanOutSpd,
     turboEndsAt,
     hasInitialStatus,
+    commandStatus,
+    commandError,
+    commandTurboEndsAt,
+    commandVersion,
   ];
 }
+
+enum DeviceCommandStatus { idle, success, failure }
