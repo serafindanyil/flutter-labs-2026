@@ -1,10 +1,9 @@
-import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/pressable_button.dart';
+import 'package:first_lab/shared/widgets/primary_button_style.dart';
+import 'package:first_lab/shared/widgets/primary_button_types.dart';
 import 'package:flutter/material.dart';
 
-enum PrimaryButtonVariant { primary, danger }
-
-enum PrimaryButtonSize { small, medium, large }
+export 'package:first_lab/shared/widgets/primary_button_types.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String title;
@@ -28,7 +27,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _resolveStyle();
+    final style = resolvePrimaryButtonStyle(variant: variant, size: size);
     final effectivelyDisabled = isDisabled || isLoading;
 
     return PressableButton(
@@ -89,97 +88,4 @@ class PrimaryButton extends StatelessWidget {
       ),
     );
   }
-
-  _PrimaryButtonStyle _resolveStyle() {
-    final variantStyle = switch (variant) {
-      PrimaryButtonVariant.primary => const _PrimaryButtonVariantStyle(
-        backgroundColor: AppColors.blue500,
-        textColor: Colors.white,
-      ),
-      PrimaryButtonVariant.danger => const _PrimaryButtonVariantStyle(
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-      ),
-    };
-
-    final sizeStyle = switch (size) {
-      PrimaryButtonSize.small => const _PrimaryButtonSizeStyle(
-        verticalPadding: 12,
-        borderRadius: 12,
-        iconSize: 16,
-        loaderSize: 18,
-        fontSize: 14,
-      ),
-      PrimaryButtonSize.medium => const _PrimaryButtonSizeStyle(
-        verticalPadding: 14,
-        borderRadius: 14,
-        iconSize: 18,
-        loaderSize: 20,
-        fontSize: 15,
-      ),
-      PrimaryButtonSize.large => const _PrimaryButtonSizeStyle(
-        verticalPadding: 18,
-        borderRadius: 16,
-        iconSize: 20,
-        loaderSize: 22,
-        fontSize: 16,
-      ),
-    };
-
-    return _PrimaryButtonStyle(
-      backgroundColor: variantStyle.backgroundColor,
-      textColor: variantStyle.textColor,
-      verticalPadding: sizeStyle.verticalPadding,
-      borderRadius: sizeStyle.borderRadius,
-      iconSize: sizeStyle.iconSize,
-      loaderSize: sizeStyle.loaderSize,
-      fontSize: sizeStyle.fontSize,
-    );
-  }
-}
-
-class _PrimaryButtonStyle {
-  final Color backgroundColor;
-  final Color textColor;
-  final double verticalPadding;
-  final double borderRadius;
-  final double iconSize;
-  final double loaderSize;
-  final double fontSize;
-
-  const _PrimaryButtonStyle({
-    required this.backgroundColor,
-    required this.textColor,
-    required this.verticalPadding,
-    required this.borderRadius,
-    required this.iconSize,
-    required this.loaderSize,
-    required this.fontSize,
-  });
-}
-
-class _PrimaryButtonVariantStyle {
-  final Color backgroundColor;
-  final Color textColor;
-
-  const _PrimaryButtonVariantStyle({
-    required this.backgroundColor,
-    required this.textColor,
-  });
-}
-
-class _PrimaryButtonSizeStyle {
-  final double verticalPadding;
-  final double borderRadius;
-  final double iconSize;
-  final double loaderSize;
-  final double fontSize;
-
-  const _PrimaryButtonSizeStyle({
-    required this.verticalPadding,
-    required this.borderRadius,
-    required this.iconSize,
-    required this.loaderSize,
-    required this.fontSize,
-  });
 }

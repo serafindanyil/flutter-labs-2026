@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class PressableButton extends StatefulWidget {
+  const PressableButton({required this.child, required this.onTap, super.key});
+
   final Widget child;
   final VoidCallback? onTap;
-
-  const PressableButton({required this.child, required this.onTap, super.key});
 
   @override
   State<PressableButton> createState() => _PressableButtonState();
