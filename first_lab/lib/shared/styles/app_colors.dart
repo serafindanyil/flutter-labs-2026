@@ -11,7 +11,7 @@ abstract final class AppColors {
   static const Color gray400 = Color(0xFF647490);
   static const Color gray300 = Color(0xFF8693AB);
   static const Color gray200 = Color(0xFFABB4C4);
-  static const Color gray100 = Color(0xFFCFD4DD);
+  static const Color gray100 = Color(0xFFE7EAEE);
 
   static const Color blue500 = Color(0xFF386E94);
   static const Color blue400 = Color(0xFF4E8EBC);
@@ -31,6 +31,8 @@ abstract final class AppColors {
   static const Color surface = white;
   static const Color surfaceAccent = blue100;
   static const Color border = gray100;
+  static const Color disabledAccent = gray500;
+  static const Color disabled = gray400;
   static const Color success = green;
   static const Color warning = yellow;
   static const Color danger = red;

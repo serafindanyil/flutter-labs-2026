@@ -46,7 +46,8 @@ dependencies:
   firebase_auth: ^6.4.0
   flutter_dotenv: ^6.0.0
   connectivity_plus: ^7.1.1
-  mqtt_client: ^10.11.11
+  socket_io_client: ^3.1.4
+  fl_chart: ^1.2.0
 
 
 dev_dependencies:

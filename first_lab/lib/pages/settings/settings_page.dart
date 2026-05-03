@@ -3,6 +3,10 @@ import 'package:first_lab/modules/auth/bloc/auth_event.dart';
 import 'package:first_lab/modules/auth/services/auth_service.dart';
 import 'package:first_lab/modules/auth/utils/auth_network_checker.dart';
 import 'package:first_lab/pages/auth/login_email_page.dart';
+import 'package:first_lab/pages/settings/widgets/edit_profile_button.dart';
+import 'package:first_lab/pages/settings/widgets/profile_field_card.dart';
+import 'package:first_lab/shared/network/bloc/network_cubit.dart';
+import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/widgets/app_toast.dart';
 import 'package:first_lab/shared/widgets/logout_dialog.dart';
@@ -103,12 +107,15 @@ class _SettingsPageState extends State<SettingsPage> {
       });
       AppToast.success(context, 'Зміни збережено!');
     } catch (_) {
-      AppToast.error(context, 'ПОмилка збереження');
+      AppToast.error(context, 'Помилка збереження');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasNetworkAccess =
+        context.watch<NetworkCubit>().state.status == NetworkStatus.online;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -126,29 +133,13 @@ class _SettingsPageState extends State<SettingsPage> {
               style: Theme.of(context).textTheme.displayLarge,
             ),
             const SizedBox(height: 32),
-            _ProfileFieldCard(
+            ProfileFieldCard(
               label: 'Ім\'я',
               hasStaticChildHeight: true,
               trailing: !_isEditing
-                  ? GestureDetector(
-                      onTap: () {
-                        setState(() => _isEditing = true);
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _nameFocusNode.requestFocus();
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.blue100,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          LucideIcons.pencil,
-                          color: AppColors.blue500,
-                          size: 24,
-                        ),
-                      ),
+                  ? EditProfileButton(
+                      isEnabled: hasNetworkAccess,
+                      onTap: () => _startEditing(hasNetworkAccess),
                     )
                   : null,
               child: _isEditing
@@ -165,7 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
             ),
             const SizedBox(height: 16),
-            _ProfileFieldCard(
+            ProfileFieldCard(
               label: 'Email',
               child: Text(
                 _currentEmail,
@@ -185,54 +176,13 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-}
 
-class _ProfileFieldCard extends StatelessWidget {
-  final String label;
-  final Widget child;
-  final Widget? trailing;
-  final bool hasStaticChildHeight;
+  void _startEditing(bool hasNetworkAccess) {
+    if (!hasNetworkAccess) return;
 
-  const _ProfileFieldCard({
-    required this.label,
-    required this.child,
-    this.trailing,
-    this.hasStaticChildHeight = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Widget content = Row(
-      children: [
-        Expanded(child: child),
-        if (trailing != null) ...[const SizedBox(width: 16), trailing!],
-      ],
-    );
-
-    if (hasStaticChildHeight) {
-      content = SizedBox(height: 60, child: content);
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: AppColors.gray500),
-          ),
-          const SizedBox(height: 12),
-          content,
-        ],
-      ),
-    );
+    setState(() => _isEditing = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocusNode.requestFocus();
+    });
   }
 }

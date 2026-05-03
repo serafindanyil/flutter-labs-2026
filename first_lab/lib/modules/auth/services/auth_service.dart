@@ -15,6 +15,7 @@ abstract class AuthService {
   Stream<User?> get authStateChanges;
   User? get currentUser;
   Future<void> updateDisplayName(String name);
+  Future<String?> getIdToken({bool forceRefresh = false});
 }
 
 class FirebaseAuthService implements AuthService {
@@ -86,4 +87,11 @@ class FirebaseAuthService implements AuthService {
 
   @override
   User? get currentUser => _firebaseAuth.currentUser;
+
+  @override
+  Future<String?> getIdToken({bool forceRefresh = false}) {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return Future<String?>.value();
+    return user.getIdToken(forceRefresh);
+  }
 }

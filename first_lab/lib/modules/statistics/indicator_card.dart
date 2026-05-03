@@ -8,6 +8,7 @@ class IndicatorCard extends StatelessWidget {
   final String? unit;
   final String? status;
   final Color? statusColor;
+  final bool isDisabled;
 
   const IndicatorCard({
     required this.title,
@@ -16,6 +17,7 @@ class IndicatorCard extends StatelessWidget {
     super.key,
     this.status,
     this.statusColor,
+    this.isDisabled = false,
   });
 
   @override
@@ -44,7 +46,7 @@ class IndicatorCard extends StatelessWidget {
               Text(
                 value ?? '-',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: AppColors.blue500,
+                  color: isDisabled ? AppColors.disabled : AppColors.blue500,
                   fontSize: 28,
                 ),
               ),
@@ -54,7 +56,9 @@ class IndicatorCard extends StatelessWidget {
                   child: Text(
                     unit!,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.blue500,
+                      color: isDisabled
+                          ? AppColors.disabled
+                          : AppColors.blue500,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

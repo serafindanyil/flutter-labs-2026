@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Humidity {
+  id        Int      @id @default(autoincrement())
+  humidity  Float    @db.Real
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([timestamp(sort: Desc)], map: "idx_humidity_timestamp")
+  @@map("humidity")
+}
+
+model Co2 {
+  id        Int      @id @default(autoincrement())
+  co2       Int
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([timestamp(sort: Desc)], map: "idx_co2_timestamp")
+  @@map("co2")
+}
+
+model TempInside {
+  id         Int      @id @default(autoincrement())
+  tempInside Float    @map("temp_inside") @db.Real
+  timestamp  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([timestamp(sort: Desc)], map: "idx_temp_inside_timestamp")
+  @@map("temp_inside")
+}
+
+model TempOutside {
+  id          Int      @id @default(autoincrement())
+  tempOutside Float    @map("temp_outside") @db.Real
+  timestamp   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([timestamp(sort: Desc)], map: "idx_temp_outside_timestamp")
+  @@map("temp_outside")
+}
+
+model SensorAnalytics {
+  bucketStart    DateTime @id @map("bucket_start") @db.Timestamptz(6)
+  avgHumidity    Float?   @map("avg_humidity") @db.Real
+  avgCo2         Float?   @map("avg_co2") @db.Real
+  avgTempInside  Float?   @map("avg_temp_inside") @db.Real
+  avgTempOutside Float?   @map("avg_temp_outside") @db.Real
+  samples        Int      @default(0)
+  updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("sensor_analytics")
+}

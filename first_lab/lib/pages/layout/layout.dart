@@ -1,10 +1,14 @@
+import 'package:first_lab/modules/device_control/device_control_module.dart';
 import 'package:first_lab/pages/home/home_page.dart';
 import 'package:first_lab/pages/settings/settings_page.dart';
 import 'package:first_lab/pages/statistics/statistics_page.dart';
+import 'package:first_lab/shared/network/bloc/network_cubit.dart';
+import 'package:first_lab/shared/network/bloc/network_state.dart';
 import 'package:first_lab/shared/network/widgets/disabled_wrapper.dart';
 import 'package:first_lab/shared/styles/app_colors.dart';
 import 'package:first_lab/shared/styles/app_shadows.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class Layout extends StatefulWidget {
@@ -46,13 +50,25 @@ class _LayoutState extends State<Layout> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.zero,
-          child: Disabled(
-            isDisabled: Disabled.of(context),
-            child: _NavBar(
-              currentIndex: _currentIndex,
-              onTabTapped: _onTabTapped,
-              disabled: Disabled.of(context),
-            ),
+          child: BlocBuilder<NetworkCubit, NetworkState>(
+            builder: (context, networkState) {
+              return BlocBuilder<DeviceControlCubit, DeviceControlState>(
+                builder: (context, deviceControlState) {
+                  final isDisabled = DeviceControlAvailability.isDisabled(
+                    networkStatus: networkState.status,
+                    deviceControl: deviceControlState,
+                  );
+
+                  return Disabled(
+                    isDisabled: isDisabled,
+                    child: _NavBar(
+                      currentIndex: _currentIndex,
+                      onTabTapped: _onTabTapped,
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
@@ -61,15 +77,10 @@ class _LayoutState extends State<Layout> {
 }
 
 class _NavBar extends StatelessWidget {
-  const _NavBar({
-    required this.currentIndex,
-    required this.onTabTapped,
-    this.disabled = false,
-  });
+  const _NavBar({required this.currentIndex, required this.onTabTapped});
 
   final int currentIndex;
   final ValueChanged<int> onTabTapped;
-  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
@@ -115,46 +126,57 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDisabled = Disabled.of(context);
+    return BlocBuilder<DeviceControlCubit, DeviceControlState>(
+      buildWhen: (previous, current) =>
+          previous.deviceStatus != current.deviceStatus,
+      builder: (context, state) {
+        final isDeviceOnline = state.deviceStatus == DeviceStatus.online;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.blue100.withValues(alpha: 0.5),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(40),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.blue100.withValues(alpha: 0.5),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Icon(LucideIcons.waves, size: 24),
-            const SizedBox(width: 8),
-            Text('SmartRecu', style: Theme.of(context).textTheme.displayMedium),
-            const SizedBox(width: 8),
-            Text(
-              'v 0.1',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
+            child: Row(
+              children: [
+                const Icon(LucideIcons.waves, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'SmartRecu',
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'v 0.1',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
+                ),
+                const Spacer(),
+                Text(
+                  isDeviceOnline ? 'Online' : 'Offline',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: isDeviceOnline
+                        ? AppColors.blue500
+                        : AppColors.danger,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              isDisabled ? 'Offline' : 'Online',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: isDisabled ? AppColors.danger : AppColors.blue500,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -174,7 +196,7 @@ class _BottomNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDisabled = Disabled.of(context);
     final color = isDisabled
-        ? AppColors.gray400
+        ? (isSelected ? AppColors.disabledAccent : AppColors.disabled)
         : (isSelected ? AppColors.blue500 : AppColors.blue300);
 
     return GestureDetector(
